@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinanceCRM - Financial Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary: #2c6bed;
+            --secondary: #6c757d;
+            --light: #f8f9fa;
+            --dark: #212529;
+        }
+
+        .hero-section {
+            background: linear-gradient(135deg, #2c6bed 0%, #1a56db 100%);
+            padding: 5rem 0;
+            color: white;
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background-color: rgba(44, 107, 237, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .btn-outline-light:hover {
+            color: var(--primary);
+        }
+
+        .navbar {
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .testimonial-card {
+            border-left: 3px solid var(--primary);
+        }
+
+        .cta-section {
+            background-color: #f8fafc;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{% url 'landing' %}">
+                <i class="bi bi-graph-up me-2"></i>FinanceCRM
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#testimonials">Testimonials</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#pricing">Pricing</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#faq">FAQ</a></li>
+                </ul>
+                <div class="d-flex">
+                    <a href="{% url 'login' %}" class="btn btn-outline-primary me-2">Login</a>
+                    <a href="{% url 'register' %}" class="btn btn-primary">Get Started</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <h1 class="display-4 fw-bold mb-3">Take Control of Your Financial Operations</h1>
+                    <p class="lead mb-4">FinanceCRM helps businesses manage partners, clients, invoices and payments in one powerful platform.</p>
+                    <div class="d-flex">
+                        <a href="{% url 'register' %}" class="btn btn-light btn-lg me-3">Get Started Free</a>
+                        <a href="#features" class="btn btn-outline-light btn-lg">Learn More</a>
+                    </div>
+                </div>
+                <div class="col-lg-6 text-center">
+                    <div class="position-relative">
+                        <img src="https://via.placeholder.com/600x400" alt="Dashboard Preview" class="img-fluid rounded shadow">
+                        <div class="position-absolute top-0 start-0 w-100 h-100 mt-4 ms-4">
+                            <div class="card shadow-sm" style="transform: rotate(5deg);">
+                                <div class="card-body p-2">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-primary rounded-circle p-2 me-2">
+                                            <i class="bi bi-currency-euro text-white"></i>
+                                        </div>
+                                        <div>
+                                            <p class="mb-0 fw-bold">€12,850</p>
+                                            <small class="text-muted">Revenue this month</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-5 bg-light">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold mb-3">Powerful Financial Management</h2>
+                <p class="text-muted w-75 mx-auto">Everything you need to manage your financial operations in one place</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body p-4">
+                            <div class="feature-icon mx-auto bg-primary-light">
+                                <i class="bi bi-people fs-2 text-primary"></i>
+                            </div>
+                            <h4 class="text-center">Partners & Clients</h4>
+                            <p class="text-muted text-center">Manage all your business relationships with detailed profiles and interaction history.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body p-4">
+                            <div class="feature-icon mx-auto bg-success-light">
+                                <i class="bi bi-credit-card fs-2 text-success"></i>
+                            </div>
+                            <h4 class="text-center">Payments & Invoices</h4>
+                            <p class="text-muted text-center">Create, send and track invoices. Manage payments and cash flow effortlessly.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body p-4">
+                            <div class="feature-icon mx-auto bg-warning-light">
+                                <i class="bi bi-bar-chart fs-2 text-warning"></i>
+                            </div>
+                            <h4 class="text-center">Financial Analytics</h4>
+                            <p class="text-muted text-center">Gain insights with real-time reports and visual dashboards for better decisions.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section id="testimonials" class="py-5">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold mb-3">Trusted by Financial Professionals</h2>
+                <p class="text-muted w-75 mx-auto">See what our users say about FinanceCRM</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body p-4">
+                            <div class="testimonial-card ps-3">
+                                <p class="fst-italic">"FinanceCRM has transformed how we manage our client relationships and payments. The dashboard gives us instant visibility into our financial health."</p>
+                                <div class="d-flex align-items-center mt-4">
+                                    <img src="https://via.placeholder.com/50" class="rounded-circle me-3" alt="User">
+                                    <div>
+                                        <h6 class="mb-0">Sarah Johnson</h6>
+                                        <small class="text-muted">CFO, TechSolutions Ltd.</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body p-4">
+                            <div class="testimonial-card ps-3">
+                                <p class="fst-italic">"The partner management module has saved us countless hours. We can now track all interactions and payments in one centralized system."</p>
+                                <div class="d-flex align-items-center mt-4">
+                                    <img src="https://via.placeholder.com/50" class="rounded-circle me-3" alt="User">
+                                    <div>
+                                        <h6 class="mb-0">Michael Brown</h6>
+                                        <small class="text-muted">Financial Advisor</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body p-4">
+                            <div class="testimonial-card ps-3">
+                                <p class="fst-italic">"As a small business owner, FinanceCRM gives me enterprise-level financial tools without the complexity. The invoicing system is a game-changer!"</p>
+                                <div class="d-flex align-items-center mt-4">
+                                    <img src="https://via.placeholder.com/50" class="rounded-circle me-3" alt="User">
+                                    <div>
+                                        <h6 class="mb-0">Elena Rodriguez</h6>
+                                        <small class="text-muted">Owner, Creative Agency</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section py-5">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8 text-center">
+                    <h2 class="fw-bold mb-4">Ready to Transform Your Financial Management?</h2>
+                    <p class="lead mb-4">Join thousands of professionals using FinanceCRM to streamline their financial operations</p>
+                    <a href="{% url 'register' %}" class="btn btn-primary btn-lg px-5">Get Started Free</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h4><i class="bi bi-graph-up me-2"></i>FinanceCRM</h4>
+                    <p class="text-white-50">The all-in-one financial management solution for modern businesses.</p>
+                </div>
+                <div class="col-md-3">
+                    <h5>Product</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#features" class="text-white-50 text-decoration-none">Features</a></li>
+                        <li><a href="#pricing" class="text-white-50 text-decoration-none">Pricing</a></li>
+                        <li><a href="#" class="text-white-50 text-decoration-none">Integrations</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h5>Company</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-white-50 text-decoration-none">About Us</a></li>
+                        <li><a href="#" class="text-white-50 text-decoration-none">Contact</a></li>
+                        <li><a href="#" class="text-white-50 text-decoration-none">Privacy Policy</a></li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="my-4 bg-light">
+            <div class="text-center text-white-50">
+                &copy; 2023 FinanceCRM. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

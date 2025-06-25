@@ -26,7 +26,13 @@ SECRET_KEY = 'django-insecure-b5uje*y3tfe13d&4v+i(kky7faq(!j99)&&xp9#49dha4c%+26
 DEBUG = True
 
 ALLOWED_HOSTS = []
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/dashboard/'
+LOGOUT_REDIRECT_URL = '/'
 
+
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 # Application definition
 
@@ -37,6 +43,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'back',
+    'crispy_forms',
+    'crispy_bootstrap5',
 ]
 
 MIDDLEWARE = [
@@ -68,6 +77,8 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'finance.wsgi.application'
+
+AUTH_USER_MODEL = 'back.User'
 
 
 # Database
