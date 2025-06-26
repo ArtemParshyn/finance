@@ -1,318 +1,226 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 
 {% block page_title %}Dashboard{% endblock %}
 
-{% block extra_css %}
-<style>
-    .stat-card {
-        border-radius: 0.75rem;
-        transition: all 0.3s ease;
-        border: none;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .stat-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-    }
-    
-    .stat-card:before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 4px;
-        height: 100%;
-    }
-    
-    .stat-card.primary:before { background-color: #2c6bed; }
-    .stat-card.success:before { background-color: #10b981; }
-    .stat-card.warning:before { background-color: #f59e0b; }
-    .stat-card.danger:before { background-color: #ef4444; }
-    
-    .stat-icon {
-        width: 60px;
-        height: 60px;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 24px;
-    }
-    
-    .stat-card.primary .stat-icon { background-color: rgba(44, 107, 237, 0.1); color: #2c6bed; }
-    .stat-card.success .stat-icon { background-color: rgba(16, 185, 129, 0.1); color: #10b981; }
-    .stat-card.warning .stat-icon { background-color: rgba(245, 158, 11, 0.1); color: #f59e0b; }
-    .stat-card.danger .stat-icon { background-color: rgba(239, 68, 68, 0.1); color: #ef4444; }
-    
-    .chart-container {
-        background: white;
-        border-radius: 0.75rem;
-        box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
-        padding: 1.5rem;
-        height: 100%;
-    }
-    
-    .chart-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1.5rem;
-    }
-    
-    .chart-actions {
-        display: flex;
-        gap: 0.5rem;
-    }
-    
-    .btn-period {
-        padding: 0.25rem 0.75rem;
-        font-size: 0.875rem;
-        border-radius: 0.5rem;
-    }
-    
-    .recent-table th {
-        font-weight: 600;
-        color: #64748b;
-        background-color: #f8fafc;
-    }
-    
-    .recent-table tr:last-child td {
-        border-bottom: none;
-    }
-    
-    .status-badge {
-        padding: 0.35rem 0.75rem;
-        border-radius: 1rem;
-        font-weight: 500;
-        font-size: 0.8rem;
-    }
-    
-    .badge-paid { background-color: #dcfce7; color: #15803d; }
-    .badge-pending { background-color: #fffbeb; color: #b45309; }
-    .badge-overdue { background-color: #fee2e2; color: #b91c1c; }
-</style>
-{% endblock %}
-
 {% block content %}
-<!-- Stats Overview -->
-<div class="row mb-4">
-    <div class="col-xl-3 col-md-6">
-        <div class="card stat-card primary">
+<div class="row">
+    <!-- Статистические карточки -->
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card stat-card h-100">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <h5 class="text-muted mb-3">Total Revenue</h5>
-                        <h2 class="mb-1">€12,850</h2>
-                        <p class="text-success mb-0"><i class="bi bi-arrow-up"></i> 12.5% since last month</p>
+                        <span class="text-muted">Total Revenue</span>
+                        <h3 class="mt-2">${{ total_revenue|floatformat:2 }}</h3>
                     </div>
-                    <div class="stat-icon">
-                        <i class="bi bi-currency-euro"></i>
+                    <div class="icon-circle bg-primary">
+                        <i class="bi bi-currency-dollar text-white"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <span class="text-{% if revenue_change_percent >= 0 %}success{% else %}danger{% endif %} fw-bold">
+                        <i class="bi bi-arrow-{% if revenue_change_percent >= 0 %}up{% else %}down{% endif %}"></i> 
+                        {{ revenue_change_percent|floatformat:1 }}%
+                    </span>
+                    <span class="text-muted">vs last day</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <span class="text-muted">Successful Transactions</span>
+                        <h3 class="mt-2">{{ successful_transactions }}</h3>
+                    </div>
+                    <div class="icon-circle bg-success">
+                        <i class="bi bi-check-circle text-white"></i>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <div class="progress" style="height: 5px;">
+                        <div class="progress-bar bg-success" role="progressbar" 
+                             style="width: {% widthratio successful_transactions successful_transactions|add:5 100 %}%"></div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    
-    <div class="col-xl-3 col-md-6">
-        <div class="card stat-card success">
+
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card stat-card h-100">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <h5 class="text-muted mb-3">Active Clients</h5>
-                        <h2 class="mb-1">42</h2>
-                        <p class="text-success mb-0"><i class="bi bi-arrow-up"></i> 5 new this month</p>
+                        <span class="text-muted">Pending Invoices</span>
+                        <h3 class="mt-2">{{ pending_invoices }}</h3>
                     </div>
-                    <div class="stat-icon">
-                        <i class="bi bi-people"></i>
+                    <div class="icon-circle bg-warning">
+                        <i class="bi bi-receipt text-white"></i>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-xl-3 col-md-6">
-        <div class="card stat-card warning">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h5 class="text-muted mb-3">Pending Invoices</h5>
-                        <h2 class="mb-1">8</h2>
-                        <p class="text-danger mb-0"><i class="bi bi-exclamation-circle"></i> 2 overdue</p>
-                    </div>
-                    <div class="stat-icon">
-                        <i class="bi bi-receipt"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-xl-3 col-md-6">
-        <div class="card stat-card danger">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h5 class="text-muted mb-3">Outstanding</h5>
-                        <h2 class="mb-1">€3,240</h2>
-                        <p class="text-danger mb-0"><i class="bi bi-clock-history"></i> Requires action</p>
-                    </div>
-                    <div class="stat-icon">
-                        <i class="bi bi-clock"></i>
-                    </div>
+                <div class="mt-4">
+                    <span class="badge bg-warning text-dark">${{ outstanding|floatformat:2 }} pending</span>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Revenue Chart -->
-<div class="row mb-4">
+<!-- График и последние транзакции -->
+<div class="row">
     <div class="col-lg-8">
-        <div class="chart-container">
-            <div class="chart-header">
-                <div>
-                    <h5 class="mb-1">Revenue Overview</h5>
-                    <p class="text-muted mb-0">Profit by day for current month</p>
-                </div>
-                <div class="chart-actions">
-                    <button class="btn btn-outline-secondary btn-period active">Week</button>
-                    <button class="btn btn-outline-secondary btn-period">Month</button>
-                    <button class="btn btn-outline-secondary btn-period">Quarter</button>
-                </div>
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Revenue Overview (7 days)</span>
+                <span class="badge bg-primary">This week</span>
             </div>
-            <div class="chart-wrapper">
-                <canvas id="revenueChart" height="300"></canvas>
+            <div class="card-body position-relative" style="height: 300px;">
+                <canvas id="revenueChart"></canvas>
             </div>
         </div>
     </div>
     
     <div class="col-lg-4">
-        <div class="chart-container">
-            <div class="chart-header">
-                <h5 class="mb-0">Revenue Distribution</h5>
-            </div>
-            <div class="chart-wrapper">
-                <canvas id="revenuePieChart" height="300"></canvas>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Recent Transactions -->
-<div class="row">
-    <div class="col-12">
-        <div class="chart-container">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="mb-0">Recent Transactions</h5>
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Recent Transactions</span>
                 <a href="#" class="btn btn-sm btn-outline-primary">View All</a>
             </div>
-            
-            <div class="table-responsive">
-                <table class="table table-borderless recent-table">
-                    <thead>
-                        <tr>
-                            <th>Invoice #</th>
-                            <th>Client</th>
-                            <th>Date</th>
-                            <th>Amount</th>
-                            <th>Status</th>
-                            <th class="text-end">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>INV-00125</td>
-                            <td>ABC Company</td>
-                            <td>15 Jun 2023</td>
-                            <td>€1,250.00</td>
-                            <td><span class="status-badge badge-paid">Paid</span></td>
-                            <td class="text-end">
-                                <button class="btn btn-sm btn-outline-secondary">
-                                    <i class="bi bi-download"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>INV-00124</td>
-                            <td>XYZ Partners</td>
-                            <td>10 Jun 2023</td>
-                            <td>€850.00</td>
-                            <td><span class="status-badge badge-pending">Pending</span></td>
-                            <td class="text-end">
-                                <button class="btn btn-sm btn-outline-secondary">
-                                    <i class="bi bi-download"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>INV-00122</td>
-                            <td>Global Solutions</td>
-                            <td>05 Jun 2023</td>
-                            <td>€2,400.00</td>
-                            <td><span class="status-badge badge-overdue">Overdue</span></td>
-                            <td class="text-end">
-                                <button class="btn btn-sm btn-outline-secondary">
-                                    <i class="bi bi-download"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>INV-00121</td>
-                            <td>Tech Innovators</td>
-                            <td>01 Jun 2023</td>
-                            <td>€1,750.00</td>
-                            <td><span class="status-badge badge-paid">Paid</span></td>
-                            <td class="text-end">
-                                <button class="btn btn-sm btn-outline-secondary">
-                                    <i class="bi bi-download"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>INV-00119</td>
-                            <td>Business Partners Co.</td>
-                            <td>28 May 2023</td>
-                            <td>€3,200.00</td>
-                            <td><span class="status-badge badge-paid">Paid</span></td>
-                            <td class="text-end">
-                                <button class="btn btn-sm btn-outline-secondary">
-                                    <i class="bi bi-download"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for transaction in recent_transactions %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">{{ transaction.client.name }}</h6>
+                                <small class="text-muted">{{ transaction.date_issued|date:"M d" }} • {{ transaction.invoice_number }}</small>
+                            </div>
+                            <div class="text-end">
+                                <strong>${{ transaction.amount|floatformat:2 }}</strong>
+                                <div>
+                                    {% if transaction.status == 'paid' %}
+                                        <span class="badge bg-success">Paid</span>
+                                    {% elif transaction.status == 'pending' %}
+                                        <span class="badge bg-warning">Pending</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ transaction.status }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="list-group-item">
+                        <div class="text-center text-muted py-3">
+                            No recent transactions
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
 
-{% block extra_js %}
+<!-- Общее состояние компании -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                Company Financial Health
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-4 mb-3">
+                        <div class="display-5 fw-bold text-primary">${{ total_revenue|floatformat:2 }}</div>
+                        <span class="text-muted">Total Revenue</span>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="display-5 fw-bold text-success">{{ successful_transactions }}</div>
+                        <span class="text-muted">Successful Transactions</span>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="display-5 fw-bold text-warning">{{ pending_invoices }}</div>
+                        <span class="text-muted">Pending Invoices</span>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Financial Stability Score</span>
+                        <strong>{{ financial_score }}/100</strong>
+                    </div>
+                    <div class="progress" style="height: 10px;">
+                        <div class="progress-bar" role="progressbar" style="width: {{ financial_score }}%; background-color: 
+                        {% if financial_score >= 80 %}var(--success)
+                        {% elif financial_score >= 60 %}var(--primary)
+                        {% else %}var(--warning)
+                        {% endif %};">
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex mt-4 flex-wrap">
+                        {% if financial_score >= 80 %}
+                        <div class="alert alert-success border-0 py-2 px-3 me-3 mb-2">
+                            <i class="bi bi-check-circle me-2"></i>
+                            <span>Excellent financial health</span>
+                        </div>
+                        {% elif financial_score >= 60 %}
+                        <div class="alert alert-primary border-0 py-2 px-3 me-3 mb-2">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <span>Good financial health</span>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-warning border-0 py-2 px-3 me-3 mb-2">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            <span>Needs improvement</span>
+                        </div>
+                        {% endif %}
+
+                        {% if pending_invoices > 5 %}
+                        <div class="alert alert-info border-0 py-2 px-3 me-3 mb-2">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <span>Pending invoices: {{ pending_invoices }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Revenue Chart
         const ctx = document.getElementById('revenueChart').getContext('2d');
-        const revenueChart = new Chart(ctx, {
-            type: 'line',
+        
+        // Получаем данные из Django контекста
+        const labels = JSON.parse('{{ chart_labels|escapejs }}');
+        const data = JSON.parse('{{ chart_data|escapejs }}');
+        const maxValue = Math.max(...data, 100);  // Минимум 100 для корректного отображения
+        
+        // Создаем градиент для столбцов
+        const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+        gradient.addColorStop(0, 'rgba(44, 107, 237, 0.8)');
+        gradient.addColorStop(1, 'rgba(44, 107, 237, 0.3)');
+        
+        new Chart(ctx, {
+            type: 'bar',
             data: {
-                labels: ['1 Jun', '5 Jun', '10 Jun', '15 Jun', '20 Jun', '25 Jun', '30 Jun'],
+                labels: labels,
                 datasets: [{
-                    label: 'Revenue (€)',
-                    data: [3200, 2800, 4100, 3500, 5200, 4800, 6100],
-                    backgroundColor: 'rgba(44, 107, 237, 0.05)',
-                    borderColor: '#2c6bed',
-                    borderWidth: 3,
-                    pointBackgroundColor: '#fff',
-                    pointBorderColor: '#2c6bed',
-                    pointBorderWidth: 2,
-                    pointRadius: 5,
-                    pointHoverRadius: 7,
-                    tension: 0.3,
-                    fill: true
+                    label: 'Daily Revenue ($)',
+                    data: data,
+                    backgroundColor: gradient,
+                    borderColor: 'rgba(44, 107, 237, 1)',
+                    borderWidth: 1,
+                    borderRadius: 5,
+                    barPercentage: 0.6,
                 }]
             },
             options: {
@@ -323,104 +231,66 @@
                         display: false
                     },
                     tooltip: {
-                        backgroundColor: 'rgba(30, 41, 59, 0.95)',
-                        padding: 12,
-                        titleFont: {
-                            size: 14,
-                            weight: 'normal'
-                        },
-                        bodyFont: {
-                            size: 13
-                        },
                         callbacks: {
                             label: function(context) {
-                                return `€${context.parsed.y.toLocaleString()}`;
+                                return `$${context.parsed.y.toFixed(2)}`;
                             }
                         }
                     }
                 },
                 scales: {
-                    x: {
-                        grid: {
-                            display: false
-                        }
-                    },
                     y: {
                         beginAtZero: true,
+                        max: maxValue * 1.2,  // Добавляем 20% сверху для красоты
                         grid: {
-                            color: 'rgba(226, 232, 240, 0.5)'
+                            drawBorder: false,
+                            color: 'rgba(0, 0, 0, 0.05)'
                         },
                         ticks: {
                             callback: function(value) {
-                                return '€' + value.toLocaleString();
-                            }
-                        }
-                    }
-                },
-                interaction: {
-                    intersect: false,
-                    mode: 'index',
-                }
-            }
-        });
-        
-        // Revenue Distribution Pie Chart
-        const pieCtx = document.getElementById('revenuePieChart').getContext('2d');
-        const revenuePieChart = new Chart(pieCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Services', 'Products', 'Subscriptions', 'Consulting'],
-                datasets: [{
-                    data: [45, 30, 15, 10],
-                    backgroundColor: [
-                        '#2c6bed',
-                        '#10b981',
-                        '#f59e0b',
-                        '#8b5cf6'
-                    ],
-                    borderWidth: 0,
-                    hoverOffset: 10
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '70%',
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            padding: 20,
-                            usePointStyle: true,
-                            pointStyle: 'circle',
-                            font: {
-                                size: 13
-                            }
+                                return '$' + value;
+                            },
+                            padding: 10
                         }
                     },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return `${context.label}: ${context.parsed}%`;
-                            }
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            padding: 10
                         }
                     }
                 }
             }
-        });
-        
-        // Period buttons functionality
-        const periodButtons = document.querySelectorAll('.btn-period');
-        periodButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                periodButtons.forEach(btn => btn.classList.remove('active'));
-                this.classList.add('active');
-                
-                // Here you would update the chart data based on period
-                // For demo purposes, we'll just show an alert
-                console.log(`Selected period: ${this.textContent}`);
-            });
         });
     });
 </script>
+
+<style>
+    .icon-circle {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+    .list-group-item {
+        border: none;
+        border-bottom: 1px solid var(--border);
+        padding: 1.25rem;
+    }
+    .list-group-item:last-child {
+        border-bottom: none;
+    }
+    .progress-bar {
+        border-radius: 4px;
+    }
+    #revenueChart {
+        width: 100% !important;
+        height: 100% !important;
+    }
+</style>
 {% endblock %}
