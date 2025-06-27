@@ -1,6 +1,3 @@
-import os
-
-from PIL.Image import Image
 from django.core.paginator import Paginator
 from django.shortcuts import redirect
 from django.views.generic import TemplateView
@@ -15,7 +12,18 @@ from django.db.models import Sum
 from invoice.models import Payment
 from .forms import CustomUserCreationForm, CustomAuthenticationForm, User
 from .models import Partner
-
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.units import mm
+from reportlab.lib.enums import TA_CENTER, TA_LEFT
+from io import BytesIO
+import locale
+from num2words import num2words
+from datetime import datetime
 
 class LandingView(TemplateView):
     template_name = 'landing.html'
@@ -216,39 +224,6 @@ def payments(request):
         'clients': clients  # Передаем клиентов в контекст
     })
 
-
-from django.http import HttpResponse
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import A4
-from reportlab.lib.units import cm
-from reportlab.lib import colors
-from io import BytesIO
-
-from django.http import HttpResponse
-from django.shortcuts import get_object_or_404
-from reportlab.lib.pagesizes import A4
-from reportlab.lib import colors
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-from reportlab.lib.units import mm
-from reportlab.lib.enums import TA_CENTER, TA_RIGHT, TA_LEFT
-from io import BytesIO
-import locale
-from num2words import num2words
-from datetime import datetime
-
-from django.http import HttpResponse
-from django.shortcuts import get_object_or_404
-from reportlab.lib.pagesizes import A4
-from reportlab.lib import colors
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-from reportlab.lib.units import mm
-from reportlab.lib.enums import TA_CENTER, TA_RIGHT, TA_LEFT
-from io import BytesIO
-import locale
-from num2words import num2words
-from datetime import datetime
 
 
 def generate_invoice_pdf(request, payment_id):
@@ -508,3 +483,7 @@ def generate_invoice_pdf(request, payment_id):
     response['Content-Disposition'] = f'attachment; filename=invoice_{payment.invoice_number}.pdf'
     response.write(buffer.getvalue())
     return response
+
+
+def profile(request):
+    return render(request, template_name='profile.html')

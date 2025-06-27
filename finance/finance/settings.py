@@ -47,7 +47,8 @@ INSTALLED_APPS = [
     'crispy_forms',
     'crispy_bootstrap5',
     'invoice',
-    'rest_framework'
+    'rest_framework',
+    'settings',
 ]
 
 MIDDLEWARE = [

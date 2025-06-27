@@ -91,8 +91,9 @@
                     <a class="nav-link" href="{% url 'dashboard' %}"><i class="bi bi-speedometer2 me-2"></i> Dashboard</a>
                     <a class="nav-link" href="#"><i class="bi bi-people me-2"></i> Partners</a>
                     <a class="nav-link" href="#"><i class="bi bi-person-badge me-2"></i> Clients</a>
+                    <a class="nav-link" href="{% url 'settings' %}"><i class="bi bi bi-gear me-2"></i> Settings</a>
                     <a class="nav-link" href="{% url 'payments' %}"><i class="bi bi-credit-card me-2"></i> Payments</a>
-                    <a class="nav-link" href="#"><i class="bi bi-person me-2"></i> Profile</a>
+                    <a class="nav-link" href="{% url 'profile' %}"><i class="bi bi-person me-2"></i> Profile</a>
                 </nav>
             </div>
 
@@ -111,13 +112,13 @@
                         </div>
                         <div class="dropdown">
                             <button class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                <i class="bi bi-person-circle me-2"></i> John Doe
+                                <i class="bi bi-person-circle me-2"></i> {{user.username}}
                             </button>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="#">Profile</a></li>
-                                <li><a class="dropdown-item" href="#">Settings</a></li>
+                                <li><a class="dropdown-item" href="{% url 'profile'%}">Profile</a></li>
+                                <li><a class="dropdown-item" href="{% url 'settings'%}">Settings</a></li>
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="#">Logout</a></li>
+                                <li><a class="dropdown-item" href="{% url 'logout'%}">Logout</a></li>
                             </ul>
                         </div>
                     </div>

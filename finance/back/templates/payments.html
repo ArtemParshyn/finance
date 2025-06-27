@@ -112,10 +112,6 @@
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="mb-3">
-                        <label for="invoiceNumber" class="form-label">Invoice Number *</label>
-                        <input type="text" class="form-control" id="invoiceNumber" required>
-                    </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="dateIssued" class="form-label">Date Issued *</label>
@@ -333,7 +329,6 @@
         function fillPaymentForm(paymentData) {
             document.getElementById('modalTitle').textContent = 'Edit Payment';
             document.getElementById('clientSelect').value = paymentData.client;
-            document.getElementById('invoiceNumber').value = paymentData.invoice_number;
             document.getElementById('dateIssued').value = paymentData.date_issued;
             document.getElementById('dateDue').value = paymentData.date_due;
             document.getElementById('datePaid').value = paymentData.date_paid || '';
@@ -415,7 +410,6 @@
             // Collect form data
             const formData = {
                 client: document.getElementById('clientSelect').value,
-                invoice_number: document.getElementById('invoiceNumber').value,
                 date_issued: document.getElementById('dateIssued').value,
                 date_due: document.getElementById('dateDue').value,
                 date_paid: document.getElementById('datePaid').value || null,
@@ -426,7 +420,7 @@
             };
 
             // Validate required fields
-            if (!formData.client || !formData.invoice_number || !formData.date_issued || !formData.date_due) {
+            if (!formData.client || !formData.date_issued || !formData.date_due) {
                 alert('Please fill all required fields');
                 return;
             }
