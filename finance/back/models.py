@@ -27,17 +27,50 @@ class User(AbstractUser):
     bio = models.TextField(_('Bio'), blank=True)
     email_verified = models.BooleanField(_('Email Verified'), default=False)
 
-    # Устанавливаем email как поле для входа (но username остается для совместимости)
+    # Добавленные поля для PDF счета
+    vat_code = models.CharField(
+        _('VAT Code'),
+        max_length=50,
+        blank=True,
+        null=True,
+        help_text=_('Tax identification number (VAT code)')
+    )
+    bank_name = models.CharField(
+        _('Bank Name'),
+        max_length=100,
+        blank=True,
+        null=True
+    )
+    bank_account = models.CharField(
+        _('Bank Account'),
+        max_length=50,
+        blank=True,
+        null=True
+    )
+    bic = models.CharField(
+        _('BIC/SWIFT'),
+        max_length=20,
+        blank=True,
+        null=True,
+        help_text=_('Bank Identifier Code')
+    )
+    registration_number = models.CharField(
+        _('Registration Number'),
+        max_length=50,
+        blank=True,
+        null=True
+    )
+
+    # Устанавливаем email как поле для входа
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username']  # username по-прежнему требуется для createsuperuser
+    REQUIRED_FIELDS = ['username']
 
     def __str__(self):
         return self.email
 
     def save(self, *args, **kwargs):
-        """Автоматически устанавливаем username на основе email"""
         if not self.username:
-            self.username = self.email.split('@')[0]  # Или другой способ генерации
+            self.username = self.email.split('@')[0]
         super().save(*args, **kwargs)
 
     class Meta:
@@ -52,9 +85,30 @@ class Partner(models.Model):
     email = models.EmailField(_('email'))
     phone = models.CharField(_('phone'), max_length=20)
     address = models.TextField(_('address'), blank=True)
+
+    # Добавленные поля для PDF счета
+    vat_code = models.CharField(
+        _('VAT Code'),
+        max_length=50,
+        blank=True,
+        null=True,
+        help_text=_('Tax identification number (VAT code)')
+    )
+    registration_number = models.CharField(
+        _('Registration Number'),
+        max_length=50,
+        blank=True,
+        null=True
+    )
+    payment_terms = models.TextField(
+        _('Payment Terms'),
+        blank=True,
+        null=True,
+        help_text=_('Default payment terms for invoices')
+    )
+
     created_at = models.DateTimeField(_('created at'), auto_now_add=True)
     updated_at = models.DateTimeField(_('updated at'), auto_now=True)
 
     def __str__(self):
         return self.name
-

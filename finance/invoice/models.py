@@ -1,4 +1,4 @@
-from importlib.resources._common import _
+from django.utils.translation import gettext_lazy as _
 
 from django.core.validators import MinValueValidator
 from django.db import models
@@ -31,11 +31,11 @@ class Payment(models.Model):
         _('status'),
         max_length=20,
         choices=STATUS_CHOICES,
-        default='pending'
+        default='pending',
+        blank=True
     )
     description = models.TextField(_('description'), blank=True)
     created_at = models.DateTimeField(_('created at'), auto_now_add=True)
-    updated_at = models.DateTimeField(_('updated at'), auto_now=True)
 
     def __str__(self):
         return f"{self.invoice_number} - {self.client.name}"
