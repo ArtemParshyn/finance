@@ -89,10 +89,10 @@
                 </div>
                 <nav class="nav flex-column p-3">
                     <a class="nav-link" href="{% url 'dashboard' %}"><i class="bi bi-speedometer2 me-2"></i> Dashboard</a>
-                    <a class="nav-link" href="#"><i class="bi bi-people me-2"></i> Partners</a>
-                    <a class="nav-link" href="#"><i class="bi bi-person-badge me-2"></i> Clients</a>
+                    <a class="nav-link" href="{% url 'partners' %}"><i class="bi bi-people me-2"></i> Partners</a>
                     <a class="nav-link" href="{% url 'settings' %}"><i class="bi bi bi-gear me-2"></i> Settings</a>
                     <a class="nav-link" href="{% url 'payments' %}"><i class="bi bi-credit-card me-2"></i> Payments</a>
+                    <a class="nav-link" href="{% url 'products' %}"><i class="bi bi bi-archive me-2"></i> Products</a>
                     <a class="nav-link" href="{% url 'profile' %}"><i class="bi bi-person me-2"></i> Profile</a>
                 </nav>
             </div>
@@ -102,14 +102,7 @@
                 <header class="d-flex justify-content-between align-items-center mb-4">
                     <h2 class="fw-bold">{% block page_title %}{% endblock %}</h2>
                     <div class="d-flex align-items-center">
-                        <div class="dropdown me-3">
-                            <button class="btn btn-light position-relative">
-                                <i class="bi bi-bell"></i>
-                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                    3
-                                </span>
-                            </button>
-                        </div>
+                       
                         <div class="dropdown">
                             <button class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
                                 <i class="bi bi-person-circle me-2"></i> {{user.username}}

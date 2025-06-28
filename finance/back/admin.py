@@ -1,8 +1,7 @@
 from django.contrib import admin
-
 from back.forms import User
-from back.models import Partner
 from invoice.models import Payment
+from partners.models import Partner
 
 # Register your models here.
 admin.site.register(User)

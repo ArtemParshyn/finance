@@ -10,8 +10,9 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
 from invoice.models import Payment
+from partners.models import Partner
 from .forms import CustomUserCreationForm, CustomAuthenticationForm, User
-from .models import Partner
+
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from reportlab.lib.pagesizes import A4
@@ -211,8 +212,8 @@ def profile_view(request):
 
 @login_required
 def payments(request):
-    payments = Payment.objects.all().order_by('-date_issued')
-    clients = Partner.objects.all()  # Получаем всех клиентов
+    payments = Payment.objects.all().filter(user=request.user).order_by('-date_issued')
+    clients = Partner.objects.all().filter(user=request.user)  # Получаем всех клиентов
 
     # Пагинация
     paginator = Paginator(payments, 10)

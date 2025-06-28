@@ -1,9 +1,8 @@
-from rest_framework import status, serializers
+from rest_framework import status
 from rest_framework.generics import get_object_or_404, RetrieveAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
-
 from settings.models import InvoiceSettings
 from .models import Payment
 from .serializers import InvoiceSerializer
@@ -37,7 +36,11 @@ class InvoiceView(RetrieveAPIView):
 
 
 class InvoiceAPIView(APIView):
-    #permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return self.queryset.filter(user=self.request.user)
+
 
     def get(self, request):
         # Возвращаем платежи только текущего пользователя

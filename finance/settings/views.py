@@ -10,7 +10,7 @@ from django.contrib.auth.decorators import login_required
 
 def invoice_settings_view(request):
     # Получаем или создаем настройки счетов
-    settings, created = InvoiceSettings.objects.get_or_create(pk=1)
+    settings, created = InvoiceSettings.objects.get_or_create(user=request.user)
 
     if request.method == 'POST':
         try:
@@ -92,4 +92,5 @@ class ModelViewCompany_User(generics.UpdateAPIView):
     queryset = User.objects.all()
     serializer_class = ModelSerializerCompany_User
 
-
+    def get_queryset(self):
+        return self.queryset.filter(user=self.request.user)

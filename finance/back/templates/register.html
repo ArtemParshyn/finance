@@ -65,15 +65,15 @@
 
     .floating-label {
         position: absolute;
-        top: 1rem;
-        left: 1rem;
+        top: 0.5rem;
+        left: 3rem;
         color: #94a3b8;
         transition: all 0.2s ease;
         pointer-events: none;
     }
 
-    .form-control:focus ~ .floating-label,
-    .form-control:not(:placeholder-shown) ~ .floating-label {
+    .form-control:focus~.floating-label,
+    .form-control:not(:placeholder-shown)~.floating-label {
         top: -0.5rem;
         left: 0.8rem;
         background: white;
@@ -177,14 +177,8 @@
                                             <div class="input-icon">
                                                 <i class="bi bi-person"></i>
                                             </div>
-                                            <input
-                                                type="text"
-                                                class="form-control input-with-icon"
-                                                id="id_first_name"
-                                                name="first_name"
-                                                placeholder=" "
-                                                required
-                                            >
+                                            <input type="text" class="form-control input-with-icon" id="id_first_name"
+                                                name="first_name" placeholder=" " required>
                                             <label for="id_first_name" class="floating-label">First Name</label>
                                         </div>
                                     </div>
@@ -195,14 +189,8 @@
                                             <div class="input-icon">
                                                 <i class="bi bi-person"></i>
                                             </div>
-                                            <input
-                                                type="text"
-                                                class="form-control input-with-icon"
-                                                id="id_last_name"
-                                                name="last_name"
-                                                placeholder=" "
-                                                required
-                                            >
+                                            <input type="text" class="form-control input-with-icon" id="id_last_name"
+                                                name="last_name" placeholder=" " required>
                                             <label for="id_last_name" class="floating-label">Last Name</label>
                                         </div>
                                     </div>
@@ -214,14 +202,8 @@
                                     <div class="input-icon">
                                         <i class="bi bi-envelope"></i>
                                     </div>
-                                    <input
-                                        type="email"
-                                        class="form-control input-with-icon"
-                                        id="id_email"
-                                        name="email"
-                                        placeholder=" "
-                                        required
-                                    >
+                                    <input type="email" class="form-control input-with-icon" id="id_email" name="email"
+                                        placeholder=" " required>
                                     <label for="id_email" class="floating-label">Email Address</label>
                                 </div>
                             </div>
@@ -233,13 +215,8 @@
                                             <div class="input-icon">
                                                 <i class="bi bi-building"></i>
                                             </div>
-                                            <input
-                                                type="text"
-                                                class="form-control input-with-icon"
-                                                id="id_company"
-                                                name="company"
-                                                placeholder=" "
-                                            >
+                                            <input type="text" class="form-control input-with-icon" id="id_company"
+                                                name="company" placeholder=" ">
                                             <label for="id_company" class="floating-label">Company (Optional)</label>
                                         </div>
                                     </div>
@@ -250,13 +227,8 @@
                                             <div class="input-icon">
                                                 <i class="bi bi-briefcase"></i>
                                             </div>
-                                            <input
-                                                type="text"
-                                                class="form-control input-with-icon"
-                                                id="id_position"
-                                                name="position"
-                                                placeholder=" "
-                                            >
+                                            <input type="text" class="form-control input-with-icon" id="id_position"
+                                                name="position" placeholder=" ">
                                             <label for="id_position" class="floating-label">Position (Optional)</label>
                                         </div>
                                     </div>
@@ -270,14 +242,8 @@
                                             <div class="input-icon">
                                                 <i class="bi bi-lock"></i>
                                             </div>
-                                            <input
-                                                type="password"
-                                                class="form-control input-with-icon"
-                                                id="id_password1"
-                                                name="password1"
-                                                placeholder=" "
-                                                required
-                                            >
+                                            <input type="password" class="form-control input-with-icon"
+                                                id="id_password1" name="password1" placeholder=" " required>
                                             <label for="id_password1" class="floating-label">Password</label>
                                             <span class="password-toggle" id="passwordToggle1">
                                                 <i class="bi bi-eye"></i>
@@ -305,14 +271,8 @@
                                             <div class="input-icon">
                                                 <i class="bi bi-lock"></i>
                                             </div>
-                                            <input
-                                                type="password"
-                                                class="form-control input-with-icon"
-                                                id="id_password2"
-                                                name="password2"
-                                                placeholder=" "
-                                                required
-                                            >
+                                            <input type="password" class="form-control input-with-icon"
+                                                id="id_password2" name="password2" placeholder=" " required>
                                             <label for="id_password2" class="floating-label">Confirm Password</label>
                                             <span class="password-toggle" id="passwordToggle2">
                                                 <i class="bi bi-eye"></i>
@@ -327,15 +287,11 @@
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" id="terms" required>
                                     <label class="form-check-label" for="terms">
-                                        I agree to the <a href="#" class="text-decoration-none">Terms & Conditions</a> and <a href="#" class="text-decoration-none">Privacy Policy</a>
+                                        I agree to the <a href="#" class="text-decoration-none">Terms & Conditions</a>
+                                        and <a href="#" class="text-decoration-none">Privacy Policy</a>
                                     </label>
                                 </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="marketing">
-                                    <label class="form-check-label" for="marketing">
-                                        I want to receive marketing emails from FinanceCRM
-                                    </label>
-                                </div>
+                                
                             </div>
 
                             <div class="d-grid mb-4">
@@ -343,7 +299,8 @@
                             </div>
 
                             <div class="auth-footer">
-                                <p class="text-muted">Already have an account? <a href="{% url 'login' %}" class="text-decoration-none fw-medium">Sign in</a></p>
+                                <p class="text-muted">Already have an account? <a href="{% url 'login' %}"
+                                        class="text-decoration-none fw-medium">Sign in</a></p>
                             </div>
                         </form>
                     </div>
@@ -356,14 +313,14 @@
 
 {% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         // Password toggle functionality
         function setupPasswordToggle(inputId, toggleId) {
             const passwordInput = document.getElementById(inputId);
             const passwordToggle = document.getElementById(toggleId);
             const eyeIcon = passwordToggle.querySelector('i');
 
-            passwordToggle.addEventListener('click', function() {
+            passwordToggle.addEventListener('click', function () {
                 const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
                 passwordInput.setAttribute('type', type);
 
@@ -390,7 +347,7 @@
         const numberReq = document.getElementById('numberReq');
         const specialReq = document.getElementById('specialReq');
 
-        passwordInput.addEventListener('input', function() {
+        passwordInput.addEventListener('input', function () {
             const password = this.value;
             let strength = 0;
 
@@ -458,11 +415,11 @@
         // Add floating label functionality for all inputs
         const inputs = document.querySelectorAll('.form-control');
         inputs.forEach(input => {
-            input.addEventListener('focus', function() {
+            input.addEventListener('focus', function () {
                 this.parentNode.querySelector('.floating-label').classList.add('active');
             });
 
-            input.addEventListener('blur', function() {
+            input.addEventListener('blur', function () {
                 if (!this.value) {
                     this.parentNode.querySelector('.floating-label').classList.remove('active');
                 }

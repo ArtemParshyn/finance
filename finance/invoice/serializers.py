@@ -3,8 +3,9 @@ from decimal import Decimal
 from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.validators import UniqueValidator
-from back.models import User, Partner
+from back.models import User
 from invoice.models import Payment
+from partners.models import Partner
 
 
 class InvoiceSerializer(serializers.Serializer):
@@ -14,7 +15,7 @@ class InvoiceSerializer(serializers.Serializer):
     items = serializers.JSONField(decoder=None, encoder=None, style={'base_template': 'textarea.html'})
     amount = serializers.DecimalField(decimal_places=2, max_digits=10, min_value=Decimal(0.01))
     date_issued = serializers.DateField()
-    date_paid = serializers.DateField(required=False)
+    date_paid = serializers.DateField(required=False, allow_null=True)
     date_due = serializers.DateField()
     status = serializers.ChoiceField(
         choices=[('pending', 'Pending'), ('paid', 'Paid'), ('overdue', 'Overdue'), ('cancelled', 'Cancelled')],

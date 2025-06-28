@@ -138,16 +138,7 @@
                         {% endif %}
                     </p>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">Email Verified</label>
-                    <p class="form-control-static">
-                        {% if user.email_verified %}
-                            <span class="badge bg-success">Yes</span>
-                        {% else %}
-                            <span class="badge bg-warning">No</span>
-                        {% endif %}
-                    </p>
-                </div>
+                
                 <div class="mb-3">
                     <label class="form-label">Last Login</label>
                     <p class="form-control-static">{{ user.last_login|date:"Y-m-d H:i"|default:"Never" }}</p>
@@ -160,23 +151,7 @@
         </div>
         
         <!-- Payment Terms -->
-        <div class="card mt-4">
-            <div class="card-header">
-                <h5 class="mb-0">Default Payment Terms</h5>
-            </div>
-            <div class="card-body">
-                <p>Set default payment terms for invoices:</p>
-                <div class="input-group">
-                    <input type="number" class="form-control" value="14" min="1" max="90">
-                    <span class="input-group-text">days</span>
-                </div>
-                <div class="mt-2">
-                    <button class="btn btn-outline-primary w-100 mt-2">
-                        Save Payment Terms
-                    </button>
-                </div>
-            </div>
-        </div>
+        
     </div>
 </div>
 {% endblock %}

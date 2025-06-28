@@ -3,7 +3,8 @@ from django.utils.translation import gettext_lazy as _
 from django.core.validators import MinValueValidator
 from django.db import models
 
-from back.models import User, Partner
+from back.models import User
+from partners.models import Partner
 
 
 class Payment(models.Model):
@@ -15,7 +16,7 @@ class Payment(models.Model):
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='payments')
-    client = models.ForeignKey(Partner, on_delete=models.CASCADE, related_name='payments')
+    client = models.ForeignKey(Partner, on_delete=models.SET_NULL,  null=True, related_name='payments')
     invoice_number = models.CharField(_('invoice number'), max_length=20, unique=True)
     items = models.JSONField(null=False, blank=False)
     amount = models.DecimalField(
