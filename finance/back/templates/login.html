@@ -1,0 +1,271 @@
+{% extends "base_public.html" %}
+
+{% block title %}Login | FinanceCRM{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-container {
+        max-width: 500px;
+    }
+
+    .auth-card {
+        border-radius: 1rem;
+        overflow: hidden;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+        border: none;
+    }
+
+    .auth-header {
+        background: linear-gradient(135deg, #2c6bed 0%, #1a56db 100%);
+        padding: 3rem 2rem;
+        text-align: center;
+        color: white;
+    }
+
+    .auth-logo {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .auth-body {
+        padding: 2.5rem;
+        background-color: white;
+    }
+
+    .form-floating .form-control {
+        border-left: 0;
+        padding-left: 0;
+        border-radius: 0 0.5rem 0.5rem 0;
+    }
+
+    .form-floating .input-group-text {
+        background: white;
+        border-right: 0;
+        border-radius: 0.5rem 0 0 0.5rem;
+    }
+
+    .password-toggle {
+        cursor: pointer;
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 10;
+    }
+
+    .divider {
+        display: flex;
+        align-items: center;
+        margin: 1.5rem 0;
+    }
+
+    .divider::before,
+    .divider::after {
+        content: '';
+        flex: 1;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .divider-text {
+        padding: 0 1rem;
+        color: #64748b;
+        font-size: 0.875rem;
+    }
+
+    .social-login .btn {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.75rem;
+        font-weight: 500;
+    }
+
+    .social-login .btn i {
+        font-size: 1.2rem;
+        margin-right: 0.5rem;
+    }
+
+    .btn-google {
+        background-color: white;
+        color: #3c4043;
+        border: 1px solid #dadce0;
+    }
+
+    .btn-google:hover {
+        background-color: #f8f9fa;
+        border-color: #d2e3fc;
+    }
+
+    .btn-facebook {
+        background-color: #1877f2;
+        color: white;
+        border: none;
+    }
+
+    .btn-facebook:hover {
+        background-color: #166fe5;
+    }
+
+    .auth-footer {
+        text-align: center;
+        margin-top: 1.5rem;
+    }
+
+    .floating-label-group {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+
+    .floating-label {
+        position: absolute;
+        top: 0.5rem;
+        left: 3rem;
+        color: #94a3b8;
+        transition: all 0.2s ease;
+        pointer-events: none;
+    }
+
+    .form-control:focus~.floating-label,
+    .form-control:not(:placeholder-shown)~.floating-label {
+        top: -0.5rem;
+        left: 0.8rem;
+        background: white;
+        padding: 0 0.2rem;
+        font-size: 0.75rem;
+        color: #2c6bed;
+    }
+
+    .input-with-icon {
+        padding-left: 3rem !important;
+    }
+
+    .input-icon {
+        position: absolute;
+        top: 50%;
+        left: 1rem;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        z-index: 10;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-10 col-lg-8">
+                <div class="auth-card">
+                    <div class="auth-header">
+                        <div class="auth-logo">
+                            <i class="bi bi-graph-up"></i>
+                        </div>
+                        <h2 class="mb-3">Welcome to FinanceCRM</h2>
+                        <p class="mb-0">Sign in to manage your financial operations</p>
+                    </div>
+
+                    <div class="auth-body">
+                        {% if form.errors %}
+                        <div class="alert alert-danger">
+                            Invalid email or password. Please try again.
+                        </div>
+                        {% endif %}
+
+                        <form method="post" action="{% url 'login' %}">
+                            {% csrf_token %}
+
+                            <div class="mb-4">
+                                <div class="position-relative">
+                                    <div class="input-icon">
+                                        <i class="bi bi-envelope"></i>
+                                    </div>
+                                    <input type="email" class="form-control input-with-icon" id="id_username"
+                                        name="username" placeholder=" " required>
+                                    <label for="id_username" class="floating-label">Email address</label>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <div class="position-relative">
+                                    <div class="input-icon">
+                                        <i class="bi bi-lock"></i>
+                                    </div>
+                                    <input type="password" class="form-control input-with-icon" id="id_password"
+                                        name="password" placeholder=" " required>
+                                    <label for="id_password" class="floating-label">Password</label>
+                                    <span class="password-toggle" id="passwordToggle">
+                                        <i class="bi bi-eye"></i>
+                                    </span>
+                                </div>
+                                <div class="d-flex justify-content-between mt-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="remember">
+                                        <label class="form-check-label small" for="remember">Remember me</label>
+                                    </div>
+                                    <a href="#" class="small text-decoration-none">Forgot password?</a>
+                                </div>
+                            </div>
+
+                            <div class="d-grid mb-4">
+                                <button class="btn btn-primary btn-lg" type="submit">Sign in</button>
+                            </div>
+
+                            
+
+                            <div class="auth-footer">
+                                <p class="text-muted">Don't have an account? <a href="{% url 'register' %}"
+                                        class="text-decoration-none fw-medium">Sign up</a></p>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Password toggle functionality
+        const passwordInput = document.getElementById('id_password');
+        const passwordToggle = document.getElementById('passwordToggle');
+        const eyeIcon = passwordToggle.querySelector('i');
+
+        passwordToggle.addEventListener('click', function () {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+
+            // Toggle eye icon
+            if (type === 'password') {
+                eyeIcon.classList.remove('bi-eye-slash');
+                eyeIcon.classList.add('bi-eye');
+            } else {
+                eyeIcon.classList.remove('bi-eye');
+                eyeIcon.classList.add('bi-eye-slash');
+            }
+        });
+
+        // Add floating label functionality for all inputs
+        const inputs = document.querySelectorAll('.form-control');
+        inputs.forEach(input => {
+            input.addEventListener('focus', function () {
+                this.parentNode.querySelector('.floating-label').classList.add('active');
+            });
+
+            input.addEventListener('blur', function () {
+                if (!this.value) {
+                    this.parentNode.querySelector('.floating-label').classList.remove('active');
+                }
+            });
+
+            // Initialize on page load if value exists
+            if (input.value) {
+                input.parentNode.querySelector('.floating-label').classList.add('active');
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,296 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Статистические карточки -->
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <span class="text-muted">Total Revenue</span>
+                        <h3 class="mt-2">${{ total_revenue|floatformat:2 }}</h3>
+                    </div>
+                    <div class="icon-circle bg-primary">
+                        <i class="bi bi-currency-dollar text-white"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <span class="text-{% if revenue_change_percent >= 0 %}success{% else %}danger{% endif %} fw-bold">
+                        <i class="bi bi-arrow-{% if revenue_change_percent >= 0 %}up{% else %}down{% endif %}"></i> 
+                        {{ revenue_change_percent|floatformat:1 }}%
+                    </span>
+                    <span class="text-muted">vs last day</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <span class="text-muted">Successful Transactions</span>
+                        <h3 class="mt-2">{{ successful_transactions }}</h3>
+                    </div>
+                    <div class="icon-circle bg-success">
+                        <i class="bi bi-check-circle text-white"></i>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <div class="progress" style="height: 5px;">
+                        <div class="progress-bar bg-success" role="progressbar" 
+                             style="width: {% widthratio successful_transactions successful_transactions|add:5 100 %}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <span class="text-muted">Pending Invoices</span>
+                        <h3 class="mt-2">{{ pending_invoices }}</h3>
+                    </div>
+                    <div class="icon-circle bg-warning">
+                        <i class="bi bi-receipt text-white"></i>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <span class="badge bg-warning text-dark">${{ outstanding|floatformat:2 }} pending</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- График и последние транзакции -->
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Revenue Overview (7 days)</span>
+                <span class="badge bg-primary">This week</span>
+            </div>
+            <div class="card-body position-relative" style="height: 300px;">
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Recent Transactions</span>
+                <a href="{% url 'payments' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for transaction in recent_transactions %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">{{ transaction.client.name }}</h6>
+                                <small class="text-muted">{{ transaction.date_issued|date:"M d" }} • {{ transaction.invoice_number }}</small>
+                            </div>
+                            <div class="text-end">
+                                <strong>${{ transaction.amount|floatformat:2 }}</strong>
+                                <div>
+                                    {% if transaction.status == 'paid' %}
+                                        <span class="badge bg-success">Paid</span>
+                                    {% elif transaction.status == 'pending' %}
+                                        <span class="badge bg-warning">Pending</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ transaction.status }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="list-group-item">
+                        <div class="text-center text-muted py-3">
+                            No recent transactions
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Общее состояние компании -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                Company Financial Health
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-4 mb-3">
+                        <div class="display-5 fw-bold text-primary">${{ total_revenue|floatformat:2 }}</div>
+                        <span class="text-muted">Total Revenue</span>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="display-5 fw-bold text-success">{{ successful_transactions }}</div>
+                        <span class="text-muted">Successful Transactions</span>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="display-5 fw-bold text-warning">{{ pending_invoices }}</div>
+                        <span class="text-muted">Pending Invoices</span>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Financial Stability Score</span>
+                        <strong>{{ financial_score }}/100</strong>
+                    </div>
+                    <div class="progress" style="height: 10px;">
+                        <div class="progress-bar" role="progressbar" style="width: {{ financial_score }}%; background-color: 
+                        {% if financial_score >= 80 %}var(--success)
+                        {% elif financial_score >= 60 %}var(--primary)
+                        {% else %}var(--warning)
+                        {% endif %};">
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex mt-4 flex-wrap">
+                        {% if financial_score >= 80 %}
+                        <div class="alert alert-success border-0 py-2 px-3 me-3 mb-2">
+                            <i class="bi bi-check-circle me-2"></i>
+                            <span>Excellent financial health</span>
+                        </div>
+                        {% elif financial_score >= 60 %}
+                        <div class="alert alert-primary border-0 py-2 px-3 me-3 mb-2">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <span>Good financial health</span>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-warning border-0 py-2 px-3 me-3 mb-2">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            <span>Needs improvement</span>
+                        </div>
+                        {% endif %}
+
+                        {% if pending_invoices > 5 %}
+                        <div class="alert alert-info border-0 py-2 px-3 me-3 mb-2">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <span>Pending invoices: {{ pending_invoices }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+        
+        // Получаем данные из Django контекста
+        const labels = JSON.parse('{{ chart_labels|escapejs }}');
+        const data = JSON.parse('{{ chart_data|escapejs }}');
+        const maxValue = Math.max(...data, 100);  // Минимум 100 для корректного отображения
+        
+        // Создаем градиент для столбцов
+        const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+        gradient.addColorStop(0, 'rgba(44, 107, 237, 0.8)');
+        gradient.addColorStop(1, 'rgba(44, 107, 237, 0.3)');
+        
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Daily Revenue ($)',
+                    data: data,
+                    backgroundColor: gradient,
+                    borderColor: 'rgba(44, 107, 237, 1)',
+                    borderWidth: 1,
+                    borderRadius: 5,
+                    barPercentage: 0.6,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `$${context.parsed.y.toFixed(2)}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: maxValue * 1.2,  // Добавляем 20% сверху для красоты
+                        grid: {
+                            drawBorder: false,
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value;
+                            },
+                            padding: 10
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            padding: 10
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+
+<style>
+    .icon-circle {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+    .list-group-item {
+        border: none;
+        border-bottom: 1px solid var(--border);
+        padding: 1.25rem;
+    }
+    .list-group-item:last-child {
+        border-bottom: none;
+    }
+    .progress-bar {
+        border-radius: 4px;
+    }
+    #revenueChart {
+        width: 100% !important;
+        height: 100% !important;
+    }
+</style>
+{% endblock %}

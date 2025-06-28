@@ -1,0 +1,246 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Invoice Settings{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Invoice Numbering</h5>
+                <span class="badge bg-primary">Next: {{ invoice_settings.generate_next_number }}</span>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <!-- Invoice Prefix and Next Number -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="invoicePrefix" class="form-label">Invoice Prefix *</label>
+                                <input type="text" class="form-control" id="invoicePrefix" 
+                                       name="prefix" value="{{ invoice_settings.prefix }}" required
+                                       pattern="[A-Za-z0-9\-_]{1,10}" title="1-10 letters, numbers, - or _">
+                                <div class="form-text">e.g. INV-, BILL-, INVOICE-</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="nextNumber" class="form-label">Next Invoice Number *</label>
+                                <input type="number" class="form-control" id="nextNumber" 
+                                       name="next_number" value="{{ invoice_settings.next_number }}" 
+                                       min="1" required>
+                                <div class="form-text">Next available number in sequence</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Format Preview -->
+                    <div class="mb-4">
+                        <label class="form-label">Number Format Preview</label>
+                        <div class="alert alert-light border">
+                            <h4 class="mb-1">{{ invoice_settings.generate_next_number }}</h4>
+                            <div class="text-muted small">Next invoice will use this format</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Format Selection -->
+                    <div class="mb-4">
+                        <label for="numberFormat" class="form-label">Number Format</label>
+                        <select class="form-select" id="numberFormat" name="format">
+                            <option value="sequential" {% if invoice_settings.format == 'sequential' %}selected{% endif %}>
+                                Sequential (000001, 000002)
+                            </option>
+                            <option value="year" {% if invoice_settings.format == 'year' %}selected{% endif %}>
+                                Year-based ({{ current_year }}-0001)
+                            </option>
+                            <option value="month" {% if invoice_settings.format == 'month' %}selected{% endif %}>
+                                Month-based ({{ current_year }}{{ current_month }}-0001)
+                            </option>
+                        </select>
+                        <div class="form-text">Select how invoice numbers should be generated</div>
+                    </div>
+                    
+                    
+                    <!-- Checkbox Options -->
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="autoIncrement" 
+                               name="auto_increment" {% if invoice_settings.auto_increment %}checked{% endif %}>
+                        <label class="form-check-label" for="autoIncrement">
+                            Auto-increment invoice numbers after creation
+                        </label>
+                        <div class="form-text">Automatically advance to next number when new invoice is created</div>
+                    </div>
+                    
+                    <!-- Save Button -->
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="bi bi-save me-2"></i> Save Settings
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Examples Column -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Numbering Examples</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>Format</th>
+                            <th>Examples</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Sequential</td>
+                            <td>
+                                <div class="d-flex flex-column">
+                                    <span>INV-000001</span>
+                                    <span>INV-000002</span>
+                                    <span>INV-000010</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Year-based</td>
+                            <td>
+                                <div class="d-flex flex-column">
+                                    <span>INV-{{ current_year }}-0001</span>
+                                    <span>INV-{{ current_year }}-0002</span>
+                                    <span>INV-{{ current_year }}-0010</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Month-based</td>
+                            <td>
+                                <div class="d-flex flex-column">
+                                    <span>INV-{{ current_year }}{{ current_month }}-0001</span>
+                                    <span>INV-{{ current_year }}{{ current_month }}-0002</span>
+                                    <span>INV-{{ current_year }}{{ current_month }}-0010</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <!-- Best Practices -->
+                <div class="card mt-4 border-info">
+                    <div class="card-header bg-info text-white py-2">
+                        <h6 class="mb-0"><i class="bi bi-lightbulb me-2"></i>Best Practices</h6>
+                    </div>
+                    <div class="card-body">
+                        <ul class="mb-0">
+                            <li class="mb-2">Use a consistent prefix for all invoices (e.g. INV-, BILL-)</li>
+                            <li class="mb-2">Always increment numbers sequentially to avoid duplicates</li>
+                            <li class="mb-2">Include year/month in format for better organization</li>
+                            <li class="mb-2">Never reuse or reset invoice numbers</li>
+                            <li class="mb-2">Keep a record of all generated invoice numbers</li>
+                            <li>Set next number higher than your last used invoice number</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Reset Warning -->
+                <div class="alert alert-warning mt-4">
+                    <h6><i class="bi bi-exclamation-triangle me-2"></i>Important</h6>
+                    <p class="mb-0">
+                        Changing numbering settings after invoices have been issued may cause 
+                        inconsistencies in your records. Proceed with caution.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Update preview when settings change
+        const prefixInput = document.getElementById('invoicePrefix');
+        const nextNumberInput = document.getElementById('nextNumber');
+        const formatSelect = document.getElementById('numberFormat');
+        
+        const updatePreview = function() {
+            const prefix = prefixInput.value || 'INV-';
+            const nextNumber = parseInt(nextNumberInput.value) || 1;
+            const format = formatSelect.value;
+            
+            let preview = '';
+            
+            switch(format) {
+                case 'sequential':
+                    preview = prefix + nextNumber.toString().padStart(6, '0');
+                    break;
+                case 'year':
+                    preview = prefix + new Date().getFullYear() + '-' + nextNumber.toString().padStart(4, '0');
+                    break;
+                case 'month':
+                    const now = new Date();
+                    const month = (now.getFullYear() + '' + (now.getMonth() + 1).toString().padStart(2, '0'));
+                    preview = prefix + month + '-' + nextNumber.toString().padStart(4, '0');
+                    break;
+                default:
+                    preview = prefix + nextNumber.toString().padStart(6, '0');
+            }
+            
+            document.querySelector('.badge.bg-primary').textContent = 'Next: ' + preview;
+        };
+        
+        // Add event listeners
+        [prefixInput, nextNumberInput, formatSelect].forEach(element => {
+            element.addEventListener('input', updatePreview);
+            element.addEventListener('change', updatePreview);
+        });
+        
+        // Initialize preview
+        updatePreview();
+    });
+</script>
+{% endblock %}
+
+<style>
+    .form-check-input:checked {
+        background-color: var(--primary);
+        border-color: var(--primary);
+    }
+    
+    .form-switch .form-check-input {
+        height: 1.5rem;
+        width: 2.8rem;
+    }
+    
+    .form-switch .form-check-input:focus {
+        box-shadow: 0 0 0 0.25rem rgba(44, 107, 237, 0.25);
+    }
+    
+    .form-text {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+    
+    table.table-sm th,
+    table.table-sm td {
+        padding: 0.75rem;
+    }
+    
+    .card-header .badge {
+        font-size: 0.9rem;
+        font-weight: 500;
+        padding: 0.5rem 0.75rem;
+    }
+    
+    .alert-light {
+        background-color: #f8f9fa;
+    }
+</style>

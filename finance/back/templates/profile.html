@@ -1,0 +1,157 @@
+
+{% extends 'base.html' %}
+
+{% block page_title %}Profile Settings{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Profile Information</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <!-- Personal Information -->
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3">
+                            <label for="firstName" class="form-label">First Name *</label>
+                            <input type="text" class="form-control" id="firstName" 
+                                   name="first_name" value="{{ user.first_name }}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="lastName" class="form-label">Last Name *</label>
+                            <input type="text" class="form-control" id="lastName" 
+                                   name="last_name" value="{{ user.last_name }}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label">Email *</label>
+                            <input type="email" class="form-control" id="email" 
+                                   name="email" value="{{ user.email }}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="phone" class="form-label">Phone</label>
+                            <input type="tel" class="form-control" id="phone" 
+                                   name="phone" value="{{ user.phone|default:'' }}">
+                        </div>
+                    </div>
+                    
+                    <!-- Company Information -->
+                    <h5 class="mt-4 mb-3">Company Information</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="company" class="form-label">Company Name</label>
+                            <input type="text" class="form-control" id="company" 
+                                   name="company" value="{{ user.company|default:'' }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="company_type" class="form-label">Company Type</label>
+                            <select class="form-select" id="company_type" name="company_type">
+                                <option value="individual" {% if user.company_type == 'individual' %}selected{% endif %}>Individual</option>
+                                <option value="company" {% if user.company_type == 'company' %}selected{% endif %}>Company</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="position" class="form-label">Position</label>
+                            <input type="text" class="form-control" id="position" 
+                                   name="position" value="{{ user.position|default:'' }}">
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label for="address" class="form-label">Address</label>
+                            <textarea class="form-control" id="address" 
+                                      name="address" rows="2">{{ user.address|default:'' }}</textarea>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label for="bio" class="form-label">Bio</label>
+                            <textarea class="form-control" id="bio" 
+                                      name="bio" rows="3">{{ user.bio|default:'' }}</textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- Financial Information -->
+                    <h5 class="mt-4 mb-3">Financial Information</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="vat_code" class="form-label">VAT Code</label>
+                            <input type="text" class="form-control" id="vat_code" 
+                                   name="vat_code" value="{{ user.vat_code|default:'' }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="registration_number" class="form-label">Registration Number</label>
+                            <input type="text" class="form-control" id="registration_number" 
+                                   name="registration_number" value="{{ user.registration_number|default:'' }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="bank_name" class="form-label">Bank Name</label>
+                            <input type="text" class="form-control" id="bank_name" 
+                                   name="bank_name" value="{{ user.bank_name|default:'' }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="bank_account" class="form-label">Bank Account</label>
+                            <input type="text" class="form-control" id="bank_account" 
+                                   name="bank_account" value="{{ user.bank_account|default:'' }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="bic" class="form-label">BIC/SWIFT</label>
+                            <input type="text" class="form-control" id="bic" 
+                                   name="bic" value="{{ user.bic|default:'' }}">
+                        </div>
+                    </div>
+                    
+                    <!-- Save Button -->
+                    <div class="d-flex justify-content-end mt-4">
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="bi bi-save me-2"></i> Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Additional Information Column -->
+    <div class="col-lg-4">
+        <!-- Password Change -->
+        
+        
+        <!-- Additional Information -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Additional Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Username</label>
+                    <p class="form-control-static">{{ user.username }}</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Account Type</label>
+                    <p class="form-control-static">
+                        {% if user.is_superuser %}
+                            Administrator
+                        {% elif user.is_staff %}
+                            Staff
+                        {% else %}
+                            Regular User
+                        {% endif %}
+                    </p>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Last Login</label>
+                    <p class="form-control-static">{{ user.last_login|date:"Y-m-d H:i"|default:"Never" }}</p>
+                </div>
+                <div>
+                    <label class="form-label">Date Joined</label>
+                    <p class="form-control-static">{{ user.date_joined|date:"Y-m-d H:i" }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Payment Terms -->
+        
+    </div>
+</div>
+{% endblock %}
