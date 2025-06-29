@@ -25,11 +25,14 @@ SECRET_KEY = 'django-insecure-b5uje*y3tfe13d&4v+i(kky7faq(!j99)&&xp9#49dha4c%+26
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = '/'
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://c237-84-17-55-155.ngrok-free.app',  # Ваш ngrok-домен
+]
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"

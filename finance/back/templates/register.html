@@ -1,435 +1,296 @@
-{% extends "base_public.html" %}
+{% extends 'base.html' %}
 
-{% block title %}Register | FinanceCRM{% endblock %}
-
-{% block extra_css %}
-<style>
-    .auth-container {
-        max-width: 600px;
-    }
-
-    .auth-card {
-        border-radius: 1rem;
-        overflow: hidden;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
-        border: none;
-    }
-
-    .auth-header {
-        background: linear-gradient(135deg, #2c6bed 0%, #1a56db 100%);
-        padding: 3rem 2rem;
-        text-align: center;
-        color: white;
-    }
-
-    .auth-logo {
-        font-size: 2.5rem;
-        margin-bottom: 1rem;
-    }
-
-    .auth-body {
-        padding: 2.5rem;
-        background-color: white;
-    }
-
-    .form-floating .form-control {
-        border-left: 0;
-        padding-left: 0;
-        border-radius: 0 0.5rem 0.5rem 0;
-    }
-
-    .form-floating .input-group-text {
-        background: white;
-        border-right: 0;
-        border-radius: 0.5rem 0 0 0.5rem;
-    }
-
-    .password-toggle {
-        cursor: pointer;
-        position: absolute;
-        right: 1rem;
-        top: 50%;
-        transform: translateY(-50%);
-        z-index: 10;
-    }
-
-    .auth-footer {
-        text-align: center;
-        margin-top: 1.5rem;
-    }
-
-    .floating-label-group {
-        position: relative;
-        margin-bottom: 1.5rem;
-    }
-
-    .floating-label {
-        position: absolute;
-        top: 0.5rem;
-        left: 3rem;
-        color: #94a3b8;
-        transition: all 0.2s ease;
-        pointer-events: none;
-    }
-
-    .form-control:focus~.floating-label,
-    .form-control:not(:placeholder-shown)~.floating-label {
-        top: -0.5rem;
-        left: 0.8rem;
-        background: white;
-        padding: 0 0.2rem;
-        font-size: 0.75rem;
-        color: #2c6bed;
-    }
-
-    .input-with-icon {
-        padding-left: 3rem !important;
-    }
-
-    .input-icon {
-        position: absolute;
-        top: 50%;
-        left: 1rem;
-        transform: translateY(-50%);
-        color: #94a3b8;
-        z-index: 10;
-    }
-
-    .password-strength {
-        height: 4px;
-        background: #e2e8f0;
-        border-radius: 2px;
-        margin-top: 0.5rem;
-        overflow: hidden;
-    }
-
-    .password-strength-bar {
-        height: 100%;
-        width: 0%;
-        background: #dc3545;
-        transition: width 0.3s ease;
-    }
-
-    .password-strength-weak .password-strength-bar {
-        width: 30%;
-        background: #dc3545;
-    }
-
-    .password-strength-medium .password-strength-bar {
-        width: 60%;
-        background: #ffc107;
-    }
-
-    .password-strength-strong .password-strength-bar {
-        width: 100%;
-        background: #198754;
-    }
-
-    .password-requirements {
-        margin-top: 0.5rem;
-        font-size: 0.8rem;
-        color: #64748b;
-    }
-
-    .requirement {
-        display: flex;
-        align-items: center;
-        margin-bottom: 0.25rem;
-    }
-
-    .requirement i {
-        margin-right: 0.5rem;
-        font-size: 0.7rem;
-    }
-
-    .requirement.valid {
-        color: #198754;
-    }
-
-    .requirement.valid i {
-        color: #198754;
-    }
-</style>
-{% endblock %}
+{% block page_title %}Ataskaitų skydas{% endblock %}
 
 {% block content %}
-<section class="py-5">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-10 col-lg-8">
-                <div class="auth-card">
-                    <div class="auth-header">
-                        <div class="auth-logo">
-                            <i class="bi bi-graph-up"></i>
-                        </div>
-                        <h2 class="mb-3">Create Your Account</h2>
-                        <p class="mb-0">Join thousands of financial professionals</p>
+<div class="row">
+    <!-- Statistinės kortelės -->
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <span class="text-muted">Bendrosios pajamos</span>
+                        <h3 class="mt-2">€{{ total_revenue|floatformat:2 }}</h3>
                     </div>
+                    <div class="icon-circle bg-primary">
+                        <i class="bi bi-currency-dollar text-white"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <span class="text-{% if revenue_change_percent >= 0 %}success{% else %}danger{% endif %} fw-bold">
+                        <i class="bi bi-arrow-{% if revenue_change_percent >= 0 %}up{% else %}down{% endif %}"></i> 
+                        {{ revenue_change_percent|floatformat:1 }}%
+                    </span>
+                    <span class="text-muted">lyginant su praeita diena</span>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                    <div class="auth-body">
-                        <form method="post" action="{% url 'register' %}">
-                            {% csrf_token %}
-
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-4">
-                                        <div class="position-relative">
-                                            <div class="input-icon">
-                                                <i class="bi bi-person"></i>
-                                            </div>
-                                            <input type="text" class="form-control input-with-icon" id="id_first_name"
-                                                name="first_name" placeholder=" " required>
-                                            <label for="id_first_name" class="floating-label">First Name</label>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-4">
-                                        <div class="position-relative">
-                                            <div class="input-icon">
-                                                <i class="bi bi-person"></i>
-                                            </div>
-                                            <input type="text" class="form-control input-with-icon" id="id_last_name"
-                                                name="last_name" placeholder=" " required>
-                                            <label for="id_last_name" class="floating-label">Last Name</label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="mb-4">
-                                <div class="position-relative">
-                                    <div class="input-icon">
-                                        <i class="bi bi-envelope"></i>
-                                    </div>
-                                    <input type="email" class="form-control input-with-icon" id="id_email" name="email"
-                                        placeholder=" " required>
-                                    <label for="id_email" class="floating-label">Email Address</label>
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-4">
-                                        <div class="position-relative">
-                                            <div class="input-icon">
-                                                <i class="bi bi-building"></i>
-                                            </div>
-                                            <input type="text" class="form-control input-with-icon" id="id_company"
-                                                name="company" placeholder=" ">
-                                            <label for="id_company" class="floating-label">Company (Optional)</label>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-4">
-                                        <div class="position-relative">
-                                            <div class="input-icon">
-                                                <i class="bi bi-briefcase"></i>
-                                            </div>
-                                            <input type="text" class="form-control input-with-icon" id="id_position"
-                                                name="position" placeholder=" ">
-                                            <label for="id_position" class="floating-label">Position (Optional)</label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-4">
-                                        <div class="position-relative">
-                                            <div class="input-icon">
-                                                <i class="bi bi-lock"></i>
-                                            </div>
-                                            <input type="password" class="form-control input-with-icon"
-                                                id="id_password1" name="password1" placeholder=" " required>
-                                            <label for="id_password1" class="floating-label">Password</label>
-                                            <span class="password-toggle" id="passwordToggle1">
-                                                <i class="bi bi-eye"></i>
-                                            </span>
-                                        </div>
-                                        <div class="password-strength" id="passwordStrength">
-                                            <div class="password-strength-bar"></div>
-                                        </div>
-                                        <div class="password-requirements">
-                                            <div class="requirement" id="lengthReq">
-                                                <i class="bi bi-circle"></i> At least 8 characters
-                                            </div>
-                                            <div class="requirement" id="numberReq">
-                                                <i class="bi bi-circle"></i> Contains a number
-                                            </div>
-                                            <div class="requirement" id="specialReq">
-                                                <i class="bi bi-circle"></i> Contains a special character
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-4">
-                                        <div class="position-relative">
-                                            <div class="input-icon">
-                                                <i class="bi bi-lock"></i>
-                                            </div>
-                                            <input type="password" class="form-control input-with-icon"
-                                                id="id_password2" name="password2" placeholder=" " required>
-                                            <label for="id_password2" class="floating-label">Confirm Password</label>
-                                            <span class="password-toggle" id="passwordToggle2">
-                                                <i class="bi bi-eye"></i>
-                                            </span>
-                                        </div>
-                                        <div id="passwordMatch" class="mt-2 small"></div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="mb-4">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="terms" required>
-                                    <label class="form-check-label" for="terms">
-                                        I agree to the <a href="#" class="text-decoration-none">Terms & Conditions</a>
-                                        and <a href="#" class="text-decoration-none">Privacy Policy</a>
-                                    </label>
-                                </div>
-                                
-                            </div>
-
-                            <div class="d-grid mb-4">
-                                <button class="btn btn-primary btn-lg" type="submit">Create Account</button>
-                            </div>
-
-                            <div class="auth-footer">
-                                <p class="text-muted">Already have an account? <a href="{% url 'login' %}"
-                                        class="text-decoration-none fw-medium">Sign in</a></p>
-                            </div>
-                        </form>
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <span class="text-muted">Sėkmingos operacijos</span>
+                        <h3 class="mt-2">{{ successful_transactions }}</h3>
+                    </div>
+                    <div class="icon-circle bg-success">
+                        <i class="bi bi-check-circle text-white"></i>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <div class="progress" style="height: 5px;">
+                        <div class="progress-bar bg-success" role="progressbar" 
+                             style="width: {% widthratio successful_transactions successful_transactions|add:5 100 %}%"></div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</section>
-{% endblock %}
 
-{% block extra_js %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <span class="text-muted">Laukiančios sąskaitos</span>
+                        <h3 class="mt-2">{{ pending_invoices }}</h3>
+                    </div>
+                    <div class="icon-circle bg-warning">
+                        <i class="bi bi-receipt text-white"></i>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <span class="badge bg-warning text-dark">€{{ outstanding|floatformat:2 }} laukia</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Grafikas ir naujausios operacijos -->
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Pajamų apžvalga (7 dienos)</span>
+                <span class="badge bg-primary">Šią savaitę</span>
+            </div>
+            <div class="card-body position-relative" style="height: 300px;">
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Naujausios operacijos</span>
+                <a href="{% url 'payments' %}" class="btn btn-sm btn-outline-primary">Rodyti visas</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for transaction in recent_transactions %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">{{ transaction.client.name }}</h6>
+                                <small class="text-muted">{{ transaction.date_issued|date:"M d" }} • {{ transaction.invoice_number }}</small>
+                            </div>
+                            <div class="text-end">
+                                <strong>€{{ transaction.amount|floatformat:2 }}</strong>
+                                <div>
+                                    {% if transaction.status == 'paid' %}
+                                        <span class="badge bg-success">Apmokėta</span>
+                                    {% elif transaction.status == 'pending' %}
+                                        <span class="badge bg-warning">Laukiama</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ transaction.status }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="list-group-item">
+                        <div class="text-center text-muted py-3">
+                            Nėra naujausių operacijų
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bendroji įmonės būklė -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                Įmonės finansinė būklė
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-4 mb-3">
+                        <div class="display-5 fw-bold text-primary">€{{ total_revenue|floatformat:2 }}</div>
+                        <span class="text-muted">Bendrosios pajamos</span>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="display-5 fw-bold text-success">{{ successful_transactions }}</div>
+                        <span class="text-muted">Sėkmingos operacijos</span>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="display-5 fw-bold text-warning">{{ pending_invoices }}</div>
+                        <span class="text-muted">Laukiančios sąskaitos</span>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Finansinio stabilumo balas</span>
+                        <strong>{{ financial_score }}/100</strong>
+                    </div>
+                    <div class="progress" style="height: 10px;">
+                        <div class="progress-bar" role="progressbar" style="width: {{ financial_score }}%; background-color: 
+                        {% if financial_score >= 80 %}var(--success)
+                        {% elif financial_score >= 60 %}var(--primary)
+                        {% else %}var(--warning)
+                        {% endif %};">
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex mt-4 flex-wrap">
+                        {% if financial_score >= 80 %}
+                        <div class="alert alert-success border-0 py-2 px-3 me-3 mb-2">
+                            <i class="bi bi-check-circle me-2"></i>
+                            <span>Puiki finansinė būklė</span>
+                        </div>
+                        {% elif financial_score >= 60 %}
+                        <div class="alert alert-primary border-0 py-2 px-3 me-3 mb-2">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <span>Gera finansinė būklė</span>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-warning border-0 py-2 px-3 me-3 mb-2">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            <span>Reikia pagerinti</span>
+                        </div>
+                        {% endif %}
+
+                        {% if pending_invoices > 5 %}
+                        <div class="alert alert-info border-0 py-2 px-3 me-3 mb-2">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <span>Laukiančios sąskaitos: {{ pending_invoices }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Password toggle functionality
-        function setupPasswordToggle(inputId, toggleId) {
-            const passwordInput = document.getElementById(inputId);
-            const passwordToggle = document.getElementById(toggleId);
-            const eyeIcon = passwordToggle.querySelector('i');
-
-            passwordToggle.addEventListener('click', function () {
-                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-                passwordInput.setAttribute('type', type);
-
-                // Toggle eye icon
-                if (type === 'password') {
-                    eyeIcon.classList.remove('bi-eye-slash');
-                    eyeIcon.classList.add('bi-eye');
-                } else {
-                    eyeIcon.classList.remove('bi-eye');
-                    eyeIcon.classList.add('bi-eye-slash');
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+        
+        // Gauti duomenis iš Django konteksto
+        const labels = JSON.parse('{{ chart_labels|escapejs }}');
+        const data = JSON.parse('{{ chart_data|escapejs }}');
+        const maxValue = Math.max(...data, 100);  // Minimum 100 teisingam atvaizdavimui
+        
+        // Sukurti gradientą stulpeliams
+        const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+        gradient.addColorStop(0, 'rgba(44, 107, 237, 0.8)');
+        gradient.addColorStop(1, 'rgba(44, 107, 237, 0.3)');
+        
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Dienos pajamos (€)',
+                    data: data,
+                    backgroundColor: gradient,
+                    borderColor: 'rgba(44, 107, 237, 1)',
+                    borderWidth: 1,
+                    borderRadius: 5,
+                    barPercentage: 0.6,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `€${context.parsed.y.toFixed(2)}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: maxValue * 1.2,  // Pridėti 20% viršuje vaizdumui
+                        grid: {
+                            drawBorder: false,
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return '€' + value;
+                            },
+                            padding: 10
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            padding: 10
+                        }
+                    }
                 }
-            });
-        }
-
-        setupPasswordToggle('id_password1', 'passwordToggle1');
-        setupPasswordToggle('id_password2', 'passwordToggle2');
-
-        // Password strength checker
-        const passwordInput = document.getElementById('id_password1');
-        const passwordStrength = document.getElementById('passwordStrength');
-        const passwordBar = passwordStrength.querySelector('.password-strength-bar');
-
-        const lengthReq = document.getElementById('lengthReq');
-        const numberReq = document.getElementById('numberReq');
-        const specialReq = document.getElementById('specialReq');
-
-        passwordInput.addEventListener('input', function () {
-            const password = this.value;
-            let strength = 0;
-
-            // Reset classes
-            passwordStrength.className = 'password-strength';
-            lengthReq.className = 'requirement';
-            numberReq.className = 'requirement';
-            specialReq.className = 'requirement';
-
-            // Check length
-            if (password.length >= 8) {
-                strength += 1;
-                lengthReq.classList.add('valid');
-                lengthReq.innerHTML = '<i class="bi bi-check-circle"></i> At least 8 characters';
-            }
-
-            // Check for numbers
-            if (/\d/.test(password)) {
-                strength += 1;
-                numberReq.classList.add('valid');
-                numberReq.innerHTML = '<i class="bi bi-check-circle"></i> Contains a number';
-            }
-
-            // Check for special characters
-            if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-                strength += 1;
-                specialReq.classList.add('valid');
-                specialReq.innerHTML = '<i class="bi bi-check-circle"></i> Contains a special character';
-            }
-
-            // Update strength bar
-            if (strength === 0) {
-                passwordBar.style.width = '0%';
-                passwordBar.style.backgroundColor = '#dc3545';
-            } else if (strength === 1) {
-                passwordStrength.classList.add('password-strength-weak');
-            } else if (strength === 2) {
-                passwordStrength.classList.add('password-strength-medium');
-            } else if (strength === 3) {
-                passwordStrength.classList.add('password-strength-strong');
-            }
-        });
-
-        // Password confirmation check
-        const passwordConfirm = document.getElementById('id_password2');
-        const passwordMatch = document.getElementById('passwordMatch');
-
-        function checkPasswordMatch() {
-            if (passwordInput.value && passwordConfirm.value) {
-                if (passwordInput.value === passwordConfirm.value) {
-                    passwordMatch.innerHTML = '<i class="bi bi-check-circle text-success me-1"></i> Passwords match';
-                    passwordMatch.style.color = '#198754';
-                } else {
-                    passwordMatch.innerHTML = '<i class="bi bi-exclamation-circle text-danger me-1"></i> Passwords do not match';
-                    passwordMatch.style.color = '#dc3545';
-                }
-            } else {
-                passwordMatch.innerHTML = '';
-            }
-        }
-
-        passwordInput.addEventListener('input', checkPasswordMatch);
-        passwordConfirm.addEventListener('input', checkPasswordMatch);
-
-        // Add floating label functionality for all inputs
-        const inputs = document.querySelectorAll('.form-control');
-        inputs.forEach(input => {
-            input.addEventListener('focus', function () {
-                this.parentNode.querySelector('.floating-label').classList.add('active');
-            });
-
-            input.addEventListener('blur', function () {
-                if (!this.value) {
-                    this.parentNode.querySelector('.floating-label').classList.remove('active');
-                }
-            });
-
-            // Initialize on page load if value exists
-            if (input.value) {
-                input.parentNode.querySelector('.floating-label').classList.add('active');
             }
         });
     });
 </script>
+
+<style>
+    .icon-circle {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+    .list-group-item {
+        border: none;
+        border-bottom: 1px solid var(--border);
+        padding: 1.25rem;
+    }
+    .list-group-item:last-child {
+        border-bottom: none;
+    }
+    .progress-bar {
+        border-radius: 4px;
+    }
+    #revenueChart {
+        width: 100% !important;
+        height: 100% !important;
+    }
+</style>
 {% endblock %}

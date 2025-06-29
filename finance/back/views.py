@@ -26,6 +26,7 @@ import locale
 from num2words import num2words
 from datetime import datetime
 
+
 class LandingView(TemplateView):
     template_name = 'landing.html'
 
@@ -226,265 +227,303 @@ def payments(request):
     })
 
 
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.units import mm
+from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+from io import BytesIO
+import locale
+from num2words import num2words
+from datetime import datetime
+from django.utils import timezone
 
+import os
+from django.conf import settings
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+import os
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.units import mm
+from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+from io import BytesIO
+from num2words import num2words
+from django.contrib.auth.decorators import login_required
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from invoice.models import Payment
+from django.utils.translation import gettext_lazy as _
+
+
+@login_required
+def register_support_fonts(request):
+    try:
+        # Попробуем найти шрифт в нескольких местах
+        font_locations = [
+            # Windows
+            r'C:\W1indows\Fonts\arialuni.ttf',  # Arial Unicode MS
+            r'C:\Windows\Fonts\times.ttf',  # Times New Roman
+
+            # Linux
+            '/usr/share/fonts/truetype/dejavu/Deja1VuSans.ttf',
+            '/usr/share/fonts/truetype/liberation/Liberat1ionSans-Regular.ttf',
+
+            # MacOS
+            '/Library/Fonts/Arial Unic1ode.ttf',
+
+            # В проекте
+            os.path.join(os.path.dirname(__file__), 'static/fonts/D1ejaVuSans.ttf'),
+            os.path.join(os.path.dirname(__file__), 'static/fonts/A1rialUnicode.ttf'),
+        ]
+        print(os.path.join(os.path.dirname(__file__), 'static/fonts/A1rialUnicode.ttf'),)
+
+        for font_path in font_locations:
+            if os.path.exists(font_path):
+                print(font_path)
+                font_name = os.path.splitext(os.path.basename(font_path))[0]
+                try:
+                    pdfmetrics.registerFont(TTFont(font_name, font_path))
+                    # Регистрируем жирную версию если есть
+                    bold_path = font_path.replace('.ttf', '-Bold.ttf')
+                    if os.path.exists(bold_path):
+                        pdfmetrics.registerFont(TTFont(f'{font_name}-Bold', bold_path))
+                    return font_name
+                except:
+                    continue
+
+        # Если ничего не найдено, используем стандартный шрифт
+        return 'Helvetica'
+    except Exception as e:
+        print(f"Error registering fonts: {e}")
+        return 'Helvetica'
+
+
+@login_required
 def generate_invoice_pdf(request, payment_id):
-    """Генерирует PDF-счет на основе модели Payment"""
     payment = get_object_or_404(Payment, id=payment_id, user=request.user)
+    client = payment.client
 
-    try:
-        locale.setlocale(locale.LC_TIME, 'en_US.UTF-8')
-    except:
-        pass
+    # Регистрируем шрифты
+    support_font = register_support_fonts(request)
 
-    seller = request.user
-    buyer = payment.client
-
-    invoice_date = payment.date_issued.strftime("%Y-%m-%d")
-    due_date = payment.date_due.strftime("%Y-%m-%d")
-
-    items = []
-    subtotal_excl_vat = 0
-    vat_sum = 0
-    discount_total = 0
-
-    for item in payment.items:
-        unit_price = item.get('unit_price', 0)
-        quantity = item.get('quantity', 1)
-        discount = item.get('discount', 0)  # Процентная скидка
-        vat_rate = item.get('vat', 21)  # Процент НДС
-
-        # Расчеты с учетом скидки и НДС
-        total_before_discount = unit_price * quantity
-        discount_amount = total_before_discount * (discount / 100)
-        total_after_discount = total_before_discount - discount_amount
-        vat_amount = total_after_discount * (vat_rate / 100)
-        total_incl_vat = total_after_discount + vat_amount
-
-        items.append({
-            "description": item.get('name', 'Service'),
-            "quantity": quantity,
-            "unit_price": unit_price,
-            "discount": discount,
-            "vat_rate": vat_rate,
-            "amount": total_incl_vat
-        })
-
-        subtotal_excl_vat += total_after_discount
-        vat_sum += vat_amount
-        discount_total += discount_amount
-
-    grand_total = subtotal_excl_vat + vat_sum
-
-    # Формирование суммы прописью
-    try:
-        amount_in_words = num2words(grand_total, to='currency', currency='EUR')
-    except:
-        amount_in_words = f"{grand_total:.2f} EUR"
-
-    # Формируем данные для PDF
-    invoice_data = {
-        "invoice_number": payment.invoice_number,
-        "invoice_date": invoice_date,
-        "due_date": due_date,
-        "seller": {
-            "name": seller.get_full_name() or seller.username,
-            "company": seller.company or "N/A",
-            "address": seller.address or "N/A",
-            "vat_code": seller.vat_code or "N/A",
-            "bank_name": seller.bank_name or "N/A",
-            "bank_account": seller.bank_account or "N/A",
-            "bic": seller.bic or "N/A",
-            "registration_number": seller.registration_number or "N/A",
-        },
-        "buyer": {
-            "name": buyer.name,
-            "contact_person": buyer.contact_person or "N/A",
-            "address": buyer.address or "N/A",
-            "vat_code": buyer.vat_code or "N/A",
-            "registration_number": buyer.registration_number or "N/A",
-        },
-        "items": items,
-        "subtotal_excl_vat": subtotal_excl_vat,
-        "vat_sum": vat_sum,
-        "discount_total": discount_total,
-        "grand_total": grand_total,
-        "currency": "EUR",
-        "amount_in_words": amount_in_words,
-        "invoiced_by":  seller.last_name+seller.first_name,
-        "notes": payment.description or "No notes",
-    }
-    print(seller.first_name)
+    # Создаем буфер для PDF
     buffer = BytesIO()
+
+    # Настройки документа
     doc = SimpleDocTemplate(
         buffer,
         pagesize=A4,
-        leftMargin=15 * mm,
-        rightMargin=15 * mm,
+        leftMargin=20 * mm,
+        rightMargin=20 * mm,
         topMargin=10 * mm,
-        bottomMargin=15 * mm
+        bottomMargin=10 * mm,
+        title=f"Sąskaita faktūra {payment.invoice_number}"
     )
 
+    # Стили
     styles = getSampleStyleSheet()
 
-    # Добавляем кастомные стили
-    styles.add(ParagraphStyle(
-        name='InvoiceTitle',
-        fontName='Helvetica-Bold',
-        fontSize=16,
-        leading=18,
+    # Основные стили
+    style_heading = ParagraphStyle(
+        'Heading1',
+        parent=styles['Heading1'],
         alignment=TA_CENTER,
-        spaceAfter=10 * mm
-    ))
+        fontSize=14,
+        spaceAfter=5,
+        fontName=f'{support_font}-Bold' if support_font != 'Helvetica' else 'Helvetica-Bold'
+    )
 
-    styles.add(ParagraphStyle(
-        name='SectionHeader',
-        fontName='Helvetica-Bold',
-        fontSize=12,
-        leading=14,
-        alignment=TA_LEFT,
-        spaceAfter=5 * mm
-    ))
-
-    styles.add(ParagraphStyle(
-        name='CompanyHeader',
-        fontName='Helvetica-Bold',
+    style_normal = ParagraphStyle(
+        'Normal',
+        parent=styles['BodyText'],
         fontSize=10,
-        leading=12,
-        alignment=TA_LEFT,
-    ))
+        spaceAfter=3,
+        fontName=support_font
+    )
 
-    elements = []
+    style_bold = ParagraphStyle(
+        'Bold',
+        parent=style_normal,
+        fontName=f'{support_font}-Bold' if support_font != 'Helvetica' else 'Helvetica-Bold'
+    )
 
-    elements.append(Paragraph("INVOICE", styles['InvoiceTitle']))
+    style_table_header = ParagraphStyle(
+        'TableHeader',
+        parent=style_normal,
+        fontName=f'{support_font}-Bold' if support_font != 'Helvetica' else 'Helvetica-Bold',
+        fontSize=9,
+        alignment=TA_CENTER
+    )
 
-    # Информация о счете
-    invoice_info = [
-        [Paragraph(f"<b>Invoice #:</b> {invoice_data['invoice_number']}", styles['Normal']),
-         Paragraph(f"<b>Date:</b> {invoice_data['invoice_date']}", styles['Normal'])],
-        [Paragraph(f"<b>Due Date:</b> {invoice_data['due_date']}", styles['Normal']), ""]
-    ]
+    style_table_cell = ParagraphStyle(
+        'TableCell',
+        parent=style_normal,
+        fontSize=9
+    )
 
-    invoice_table = Table(invoice_info, colWidths=[90 * mm, 90 * mm])
-    elements.append(invoice_table)
-    elements.append(Spacer(1, 10 * mm))
+    style_table_cell_center = ParagraphStyle(
+        'TableCellCenter',
+        parent=style_table_cell,
+        alignment=TA_CENTER
+    )
 
-    # Продавец и покупатель
-    seller_data = [
-        [Paragraph("<b>From:</b>", styles['CompanyHeader'])],
-        [Paragraph(invoice_data['seller']['name'], styles['Normal'])],
-        [Paragraph(invoice_data['seller']['company'], styles['Normal'])],
-        [Paragraph(f"VAT: {invoice_data['seller']['vat_code']}", styles['Normal'])],
-        [Paragraph(f"Bank: {invoice_data['seller']['bank_name']}", styles['Normal'])],
-        [Paragraph(f"Account: {invoice_data['seller']['bank_account']}", styles['Normal'])],
-        [Paragraph(f"BIC: {invoice_data['seller']['bic']}", styles['Normal'])],
-        [Paragraph(f"Reg. No: {invoice_data['seller']['registration_number']}", styles['Normal'])],
-    ]
+    style_table_cell_right = ParagraphStyle(
+        'TableCellRight',
+        parent=style_table_cell,
+        alignment=TA_RIGHT
+    )
 
-    buyer_data = [
-        [Paragraph("<b>To:</b>", styles['CompanyHeader'])],
-        [Paragraph(invoice_data['buyer']['name'], styles['Normal'])],
-        [Paragraph(invoice_data['buyer']['address'], styles['Normal'])],
-        [Paragraph(f"VAT: {invoice_data['buyer']['vat_code']}", styles['Normal'])],
-        [Paragraph(f"Reg. No: {invoice_data['buyer']['registration_number']}", styles['Normal'])],
-    ]
+    # Функция форматирования валюты
+    def format_currency(value):
+        try:
+            value = float(value)
+            return f"{value:,.2f}".replace(",", " ").replace(".", ",")
+        except:
+            return "0,00"
 
-    seller_buyer_data = [
-        [Table(seller_data), Table(buyer_data)]
-    ]
+    # Формируем документ
+    story = []
 
-    seller_buyer_table = Table(seller_buyer_data, colWidths=[90 * mm, 90 * mm])
-    elements.append(seller_buyer_table)
-    elements.append(Spacer(1, 10 * mm))
+    # 1. Заголовок
+    story.append(Paragraph("SĄSKAITA FAKTŪRA", style_heading))
+    story.append(Spacer(1, 10))
 
-    # Таблица с товарами
+    # 2. Номер и дата
+    story.append(Paragraph(f"<b>Serija ir Nr.:</b> {payment.invoice_number}", style_normal))
+    story.append(Paragraph(f"<b>Išrašymo data:</b> {payment.date_issued.strftime('%Y m. %B %d d.')}", style_normal))
+    story.append(Spacer(1, 15))
+
+    # 3. Продавец и покупатель
+    story.append(Paragraph("<b>Pardavėjas</b>", style_bold))
+    seller_info = []
+    seller_info.append(request.user.company or request.user.get_full_name())
+    if request.user.registration_number:
+        seller_info.append(f"Įmonės kodas: {request.user.registration_number}")
+    if request.user.address:
+        seller_info.append(f"Adresas: {request.user.address}")
+
+    for line in seller_info:
+        story.append(Paragraph(line, style_normal))
+
+    story.append(Spacer(1, 5))
+
+    story.append(Paragraph("<b>Pirkėjas</b>", style_bold))
+    if client:
+        buyer_info = []
+        buyer_info.append(client.name)
+        if client.address:
+            buyer_info.append(f"Adresas: {client.address}")
+
+        for line in buyer_info:
+            story.append(Paragraph(line, style_normal))
+    else:
+        story.append(Paragraph("Nenurodytas", style_normal))
+
+    story.append(Spacer(1, 15))
+
+    # 4. Таблица товаров
+    # Заголовки таблицы
     table_data = [
         [
-            Paragraph("Description", styles['SectionHeader']),
-            Paragraph("Qty", styles['SectionHeader']),
-            Paragraph("Unit Price", styles['SectionHeader']),
-            Paragraph("Discount (%)", styles['SectionHeader']),
-            Paragraph("VAT (%)", styles['SectionHeader']),
-            Paragraph("Amount", styles['SectionHeader'])
+            Paragraph("Pavadinimas", style_table_header),
+            Paragraph("Kiekis", style_table_header),
+            Paragraph("Matas", style_table_header),
+            Paragraph("Kaina", style_table_header),
+            Paragraph("Suma", style_table_header),
         ]
     ]
 
-    for item in invoice_data['items']:
+    # Товары
+    for item in payment.items:
+        name = item.get('name', '')
+        quantity = item.get('quantity', 1)
+        unit = item.get('unit', '')
+        price = item.get('price', 0)
+        total = item.get('total', 0)
+
         table_data.append([
-            Paragraph(item['description'], styles['Normal']),
-            Paragraph(str(item['quantity']), styles['Normal']),
-            Paragraph(f"{item['unit_price']:.2f} {invoice_data['currency']}", styles['Normal']),
-            Paragraph(f"{item['discount']}%", styles['Normal']),
-            Paragraph(f"{item['vat_rate']}%", styles['Normal']),
-            Paragraph(f"{item['amount']:.2f} {invoice_data['currency']}", styles['Normal'])
+            Paragraph(name, style_table_cell),
+            Paragraph(str(quantity), style_table_cell_center),
+            Paragraph(unit, style_table_cell_center),
+            Paragraph(format_currency(price), style_table_cell_right),
+            Paragraph(format_currency(total), style_table_cell_right),
         ])
 
-    items_table = Table(table_data, colWidths=[50 * mm, 15 * mm, 25 * mm, 20 * mm, 20 * mm, 30 * mm])
+    # Создаем таблицу
+    items_table = Table(
+        table_data,
+        colWidths=[70 * mm, 20 * mm, 20 * mm, 30 * mm, 30 * mm]
+    )
+
     items_table.setStyle(TableStyle([
-        ('LINEABOVE', (0, 0), (-1, 0), 1, colors.black),
-        ('LINEBELOW', (0, 0), (-1, 0), 1, colors.black),
-        ('LINEBELOW', (0, -1), (-1, -1), 1, colors.black),
-        ('ALIGN', (2, 0), (-1, -1), 'RIGHT'),
-        ('FONT', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
-        ('PADDING', (0, 0), (-1, -1), 3),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
+        ('ALIGN', (3, 0), (-1, -1), 'RIGHT'),
+        ('FONTSIZE', (0, 0), (-1, -1), 9),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 5),
+        ('TOPPADDING', (0, 0), (-1, 0), 5),
     ]))
 
-    elements.append(items_table)
-    elements.append(Spacer(1, 10 * mm))
+    story.append(items_table)
+    story.append(Spacer(1, 10))
 
-    # Итоговые суммы
-    totals_data = [
-        [Paragraph("Subtotal:", styles['Normal']),
-         Paragraph(f"{invoice_data['subtotal_excl_vat']:.2f} {invoice_data['currency']}", styles['Normal'])],
-        [Paragraph("VAT:", styles['Normal']),
-         Paragraph(f"{invoice_data['vat_sum']:.2f} {invoice_data['currency']}", styles['Normal'])],
-        [Paragraph("Discount:", styles['Normal']),
-         Paragraph(f"-{invoice_data['discount_total']:.2f} {invoice_data['currency']}", styles['Normal'])],
-        [Paragraph("<b>Total:</b>", styles['SectionHeader']),
-         Paragraph(f"<b>{invoice_data['grand_total']:.2f} {invoice_data['currency']}</b>", styles['SectionHeader'])]
-    ]
+    # 5. Итоговые суммы
+    total_amount = float(payment.amount)
 
-    totals_table = Table(totals_data, colWidths=[120 * mm, 50 * mm])
-    totals_table.setStyle(TableStyle([
-        ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
-        ('FONTSIZE', (0, -1), (-1, -1), 12),
-        ('LINEABOVE', (0, -1), (-1, -1), 1, colors.black),
-    ]))
+    # Строка с промежуточной суммой
+    story.append(Paragraph(
+        f"Tarpinė suma (EUR): {format_currency(total_amount)}",
+        style_table_cell_right
+    ))
 
-    elements.append(totals_table)
-    elements.append(Spacer(1, 5 * mm))
+    # Строка с общей суммой
+    story.append(Paragraph(
+        f"Bendra suma (EUR): {format_currency(total_amount)}",
+        style_table_cell_right
+    ))
 
-    # Сумма прописью
-    elements.append(Paragraph(f"<b>Amount in words:</b> {invoice_data['amount_in_words']}", styles['Normal']))
-    elements.append(Spacer(1, 15 * mm))
+    story.append(Spacer(1, 10))
 
-    # Примечания
-    if invoice_data['notes']:
-        elements.append(Paragraph("<b>Notes:</b>", styles['SectionHeader']))
-        elements.append(Paragraph(invoice_data['notes'], styles['Normal']))
-        elements.append(Spacer(1, 10 * mm))
+    # 6. Сумма прописью
+    try:
+        amount_in_words = num2words(
+            total_amount,
+            lang='lt',
+            to='currency',
+            currency='EUR'
+        ).capitalize().replace('eurai', 'Eur').replace('euro', 'Eur')
 
-    # Подписи
-    signature_data = [
-        [Paragraph("_________________________", styles['Normal']),
-         Paragraph("_________________________", styles['Normal'])],
-        [Paragraph(f"Invoiced by: {invoice_data['invoiced_by']}", styles['Normal']),
-         Paragraph(f"Invoice received by: {invoice_data['buyer']['name']}", styles['Normal'])],
-        [Paragraph(f"Date: {datetime.now().strftime('%Y-%m-%d')}", styles['Normal']), ""]
-    ]
+        story.append(Paragraph(
+            f"Suma žodžiais: {amount_in_words}",
+            style_normal
+        ))
+    except Exception as e:
+        print(f"Error converting amount to words: {e}")
 
-    signature_table = Table(signature_data, colWidths=[90 * mm, 90 * mm])
-    elements.append(signature_table)
+    story.append(Spacer(1, 10))
 
-    doc.build(elements)
+    # 7. Срок оплаты
+    story.append(Paragraph(
+        f"Apmokėti iki: {payment.date_due.strftime('%Y-%m-%d')}",
+        style_normal
+    ))
+
+    # Генерируем PDF
+    doc.build(story)
+
+    # Возвращаем PDF
     buffer.seek(0)
-
-    # Возвращаем PDF как HTTP-ответ
-    response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename=invoice_{payment.invoice_number}.pdf'
-    response.write(buffer.getvalue())
+    response = HttpResponse(buffer, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename=saskaita_{payment.invoice_number}.pdf'
     return response
-
 
 def profile(request):
     return render(request, template_name='profile.html')

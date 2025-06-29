@@ -103,6 +103,17 @@
                 {% csrf_token %}
                 <div class="modal-body">
                     <input type="hidden" id="paymentId">
+
+                    <!-- Шаблон нумерации (только для новых платежей) -->
+                    <div class="mb-3" id="templateField" style="display: none;">
+                        <label for="templateSelect" class="form-label">Numbering Template</label>
+                        <select class="form-select" id="templateSelect">
+                            <option value="" selected>Default Template</option>
+                            <!-- Шаблоны будут загружены динамически -->
+                        </select>
+                        <div class="form-text">Select a custom numbering template for this invoice</div>
+                    </div>
+
                     <div class="mb-3">
                         <label for="clientSelect" class="form-label">Client *</label>
                         <select class="form-select" id="clientSelect" required>
@@ -204,6 +215,7 @@
         const paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
         const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
         let currentPaymentId = null;
+        let templatesLoaded = false;
 
         // Button handlers
         document.querySelectorAll('.edit-btn').forEach(btn => {
@@ -397,6 +409,37 @@
             deleteModal.show();
         }
 
+        // Функция загрузки шаблонов нумерации
+        function loadNumberingTemplates() {
+            return fetch('/settings/api/numbering-templates')
+                .then(response => {
+                    if (!response.ok) throw new Error('Failed to load templates');
+                    return response.json();
+                })
+                .then(templates => {
+                    const select = document.getElementById('templateSelect');
+
+                    // Очищаем и добавляем опции
+                    while (select.options.length > 1) {
+                        select.remove(1);
+                    }
+
+                    templates.forEach(template => {
+                        const option = document.createElement('option');
+                        option.value = template.id;
+                        option.textContent = template.name;
+                        select.appendChild(option);
+                    });
+
+                    return templates;
+                })
+                .catch(error => {
+                    console.error('Error loading templates:', error);
+                    alert('Failed to load numbering templates');
+                    return [];
+                });
+        }
+
         function savePayment(e) {
             e.preventDefault();
 
@@ -418,6 +461,11 @@
                 amount: parseFloat(document.getElementById('grandTotal').textContent.replace('$', '')),
                 items: []
             };
+
+            // Добавляем template_id для новых платежей
+            if (!currentPaymentId) {
+                formData.template_id = document.getElementById('templateSelect').value || null;
+            }
 
             // Validate required fields
             if (!formData.client || !formData.date_issued || !formData.date_due) {
@@ -530,11 +578,22 @@
                 document.getElementById('modalTitle').textContent = 'Add Payment';
                 document.getElementById('grandTotal').textContent = '$0.00';
                 document.getElementById('datePaid').value = '';
+                document.getElementById('templateField').style.display = 'block';
                 addItemRow();
                 currentPaymentId = null;
 
                 // Hide paid date field by default
                 document.getElementById('datePaid').parentElement.style.display = 'none';
+
+                // Загружаем шаблоны при первом открытии
+                if (!templatesLoaded) {
+                    loadNumberingTemplates().then(() => {
+                        templatesLoaded = true;
+                    });
+                }
+            } else {
+                // Скрываем поле шаблона для редактирования
+                document.getElementById('templateField').style.display = 'none';
             }
         });
 
@@ -589,6 +648,13 @@
     .form-control:focus {
         border-color: #2c6bed;
         box-shadow: 0 0 0 0.2rem rgba(44, 107, 237, 0.25);
+    }
+
+    #templateField {
+        padding: 12px;
+        background-color: #f8f9fa;
+        border-radius: 6px;
+        border-left: 4px solid #2c6bed;
     }
 </style>
 {% endblock %}

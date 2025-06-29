@@ -43,3 +43,4 @@ class Payment(models.Model):
 
     class Meta:
         ordering = ['-date_issued']
+

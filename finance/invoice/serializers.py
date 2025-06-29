@@ -22,6 +22,14 @@ class InvoiceSerializer(serializers.Serializer):
         required=False)
     description = serializers.CharField(allow_blank=True, required=False, style={'base_template': 'textarea.html'})
 
+    # Добавить это поле
+    template_id = serializers.IntegerField(
+        required=False,
+        allow_null=True,
+        write_only=True,  # Важно: только для записи, не для чтения
+        help_text="ID of numbering template to use"
+    )
+
     def validate(self, data):
         """
         Переносим общую валидацию для create и update в этот метод
@@ -61,13 +69,14 @@ class InvoiceSerializer(serializers.Serializer):
         return data
 
     def create(self, validated_data):
-        # Валидация теперь происходит в методе validate()
+        # Удаляем template_id перед созданием объекта
+        validated_data.pop('template_id', None)
         return Payment.objects.create(**validated_data)
 
     def update(self, instance, validated_data):
-        # Обновляем все поля, а не только выборочные
+        # Удаляем template_id перед обновлением
+        validated_data.pop('template_id', None)
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
-
         instance.save()
         return instance

@@ -1,246 +1,618 @@
 {% extends 'base.html' %}
 
-{% block page_title %}Invoice Settings{% endblock %}
+{% block page_title %}Mokėjimai{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-lg-8">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Invoice Numbering</h5>
-                <span class="badge bg-primary">Next: {{ invoice_settings.generate_next_number }}</span>
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Mokėjimai</h5>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#paymentModal">Pridėti mokėjimą</button>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Sąskaitos #</th>
+                        <th>Klientas</th>
+                        <th>Suma</th>
+                        <th>Išrašymo data</th>
+                        <th>Terminas</th>
+                        <th>Apmokėjimo data</th>
+                        <th>Būsena</th>
+                        <th>Veiksmai</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for payment in payments %}
+                    <tr>
+                        <td>{{ payment.invoice_number }}</td>
+                        <td>{{ payment.client.name }}</td>
+                        <td>€{{ payment.amount|floatformat:2 }}</td>
+                        <td>{{ payment.date_issued|date:"Y-m-d" }}</td>
+                        <td>{{ payment.date_due|date:"Y-m-d" }}</td>
+                        <td>{{ payment.date_paid|date:"Y-m-d"|default:"-" }}</td>
+                        <td>
+                            {% if payment.status == 'paid' %}
+                            <span class="badge bg-success">Apmokėta</span>
+                            {% elif payment.status == 'pending' %}
+                            <span class="badge bg-warning">Laukiama</span>
+                            {% elif payment.status == 'overdue' %}
+                            <span class="badge bg-danger">Vėluoja</span>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ payment.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary edit-btn" data-id="{{ payment.id }}">
+                                Redaguoti
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger delete-btn" data-id="{{ payment.id }}">
+                                Ištrinti
+                            </button>
+                            <button class="btn btn-sm btn-outline-success download-btn" data-id="{{ payment.id }}">
+                                Atsisiųsti
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center">Nėra mokėjimų</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Puslapiavimas -->
+        <nav aria-label="Page navigation">
+            <ul class="pagination">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Atgal</a>
+                </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+                {% else %}
+                <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Kitas</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<!-- Formos modalinis langas -->
+<div class="modal fade" id="paymentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Pridėti mokėjimą</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Uždaryti"></button>
             </div>
-            <div class="card-body">
-                <form method="post">
-                    {% csrf_token %}
-                    
-                    <!-- Invoice Prefix and Next Number -->
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="invoicePrefix" class="form-label">Invoice Prefix *</label>
-                                <input type="text" class="form-control" id="invoicePrefix" 
-                                       name="prefix" value="{{ invoice_settings.prefix }}" required
-                                       pattern="[A-Za-z0-9\-_]{1,10}" title="1-10 letters, numbers, - or _">
-                                <div class="form-text">e.g. INV-, BILL-, INVOICE-</div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="nextNumber" class="form-label">Next Invoice Number *</label>
-                                <input type="number" class="form-control" id="nextNumber" 
-                                       name="next_number" value="{{ invoice_settings.next_number }}" 
-                                       min="1" required>
-                                <div class="form-text">Next available number in sequence</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Format Preview -->
-                    <div class="mb-4">
-                        <label class="form-label">Number Format Preview</label>
-                        <div class="alert alert-light border">
-                            <h4 class="mb-1">{{ invoice_settings.generate_next_number }}</h4>
-                            <div class="text-muted small">Next invoice will use this format</div>
-                        </div>
-                    </div>
-                    
-                    <!-- Format Selection -->
-                    <div class="mb-4">
-                        <label for="numberFormat" class="form-label">Number Format</label>
-                        <select class="form-select" id="numberFormat" name="format">
-                            <option value="sequential" {% if invoice_settings.format == 'sequential' %}selected{% endif %}>
-                                Sequential (000001, 000002)
-                            </option>
-                            <option value="year" {% if invoice_settings.format == 'year' %}selected{% endif %}>
-                                Year-based ({{ current_year }}-0001)
-                            </option>
-                            <option value="month" {% if invoice_settings.format == 'month' %}selected{% endif %}>
-                                Month-based ({{ current_year }}{{ current_month }}-0001)
-                            </option>
+            <form id="paymentForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <input type="hidden" id="paymentId">
+
+                    <!-- Numeravimo šablonas -->
+                    <div class="mb-3" id="templateField" style="display: none;">
+                        <label for="templateSelect" class="form-label">Numeravimo šablonas</label>
+                        <select class="form-select" id="templateSelect">
+                            <option value="" selected>Numatytasis šablonas</option>
+                            <!-- Dinaminis įkėlimas -->
                         </select>
-                        <div class="form-text">Select how invoice numbers should be generated</div>
+                        <div class="form-text">Pasirinkite pasirinktinį numeravimo šabloną šiai sąskaitai</div>
                     </div>
-                    
-                    
-                    <!-- Checkbox Options -->
-                    <div class="form-check form-switch mb-3">
-                        <input class="form-check-input" type="checkbox" id="autoIncrement" 
-                               name="auto_increment" {% if invoice_settings.auto_increment %}checked{% endif %}>
-                        <label class="form-check-label" for="autoIncrement">
-                            Auto-increment invoice numbers after creation
-                        </label>
-                        <div class="form-text">Automatically advance to next number when new invoice is created</div>
+
+                    <div class="mb-3">
+                        <label for="clientSelect" class="form-label">Klientas *</label>
+                        <select class="form-select" id="clientSelect" required>
+                            <option value="" disabled selected>Pasirinkite klientą</option>
+                            {% for client in clients %}
+                            <option value="{{ client.id }}">{{ client.name }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
-                    
-                    <!-- Save Button -->
-                    <div class="d-flex justify-content-end">
-                        <button type="submit" class="btn btn-primary px-4">
-                            <i class="bi bi-save me-2"></i> Save Settings
-                        </button>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="dateIssued" class="form-label">Išrašymo data *</label>
+                            <input type="date" class="form-control" id="dateIssued" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="dateDue" class="form-label">Terminas *</label>
+                            <input type="date" class="form-control" id="dateDue" required>
+                        </div>
                     </div>
-                </form>
-            </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="statusSelect" class="form-label">Būsena</label>
+                            <select class="form-select" id="statusSelect">
+                                <option value="pending" selected>Laukiama</option>
+                                <option value="paid">Apmokėta</option>
+                                <option value="overdue">Vėluoja</option>
+                                <option value="cancelled">Atšaukta</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="datePaid" class="form-label">Apmokėjimo data</label>
+                            <input type="date" class="form-control" id="datePaid">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Aprašymas</label>
+                        <textarea class="form-control" id="description" rows="2"></textarea>
+                    </div>
+
+                    <h5 class="mt-4">Prekės/Paslaugos</h5>
+                    <table class="table table-bordered" id="itemsTable">
+                        <thead>
+                            <tr>
+                                <th>Pavadinimas *</th>
+                                <th>Kiekis *</th>
+                                <th>Vieneto kaina *</th>
+                                <th>Nuolaida (%)</th>
+                                <th>PVM (%)</th>
+                                <th>Iš viso</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Eilutės bus pridėtos -->
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="5" class="text-end fw-bold">Bendra suma</td>
+                                <td class="fw-bold" id="grandTotal">€0.00</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="addItem">
+                        <i class="bi bi-plus-circle"></i> Pridėti prekę
+                    </button>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Atšaukti</button>
+                    <button type="submit" class="btn btn-primary">Išsaugoti mokėjimą</button>
+                </div>
+            </form>
         </div>
     </div>
-    
-    <!-- Examples Column -->
-    <div class="col-lg-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Numbering Examples</h5>
+</div>
+
+<!-- Ištrynimo patvirtinimo langas -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Ištrynimo patvirtinimas</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Uždaryti"></button>
             </div>
-            <div class="card-body">
-                <table class="table table-sm table-hover">
-                    <thead>
-                        <tr>
-                            <th>Format</th>
-                            <th>Examples</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Sequential</td>
-                            <td>
-                                <div class="d-flex flex-column">
-                                    <span>INV-000001</span>
-                                    <span>INV-000002</span>
-                                    <span>INV-000010</span>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Year-based</td>
-                            <td>
-                                <div class="d-flex flex-column">
-                                    <span>INV-{{ current_year }}-0001</span>
-                                    <span>INV-{{ current_year }}-0002</span>
-                                    <span>INV-{{ current_year }}-0010</span>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Month-based</td>
-                            <td>
-                                <div class="d-flex flex-column">
-                                    <span>INV-{{ current_year }}{{ current_month }}-0001</span>
-                                    <span>INV-{{ current_year }}{{ current_month }}-0002</span>
-                                    <span>INV-{{ current_year }}{{ current_month }}-0010</span>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-                
-                <!-- Best Practices -->
-                <div class="card mt-4 border-info">
-                    <div class="card-header bg-info text-white py-2">
-                        <h6 class="mb-0"><i class="bi bi-lightbulb me-2"></i>Best Practices</h6>
-                    </div>
-                    <div class="card-body">
-                        <ul class="mb-0">
-                            <li class="mb-2">Use a consistent prefix for all invoices (e.g. INV-, BILL-)</li>
-                            <li class="mb-2">Always increment numbers sequentially to avoid duplicates</li>
-                            <li class="mb-2">Include year/month in format for better organization</li>
-                            <li class="mb-2">Never reuse or reset invoice numbers</li>
-                            <li class="mb-2">Keep a record of all generated invoice numbers</li>
-                            <li>Set next number higher than your last used invoice number</li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <!-- Reset Warning -->
-                <div class="alert alert-warning mt-4">
-                    <h6><i class="bi bi-exclamation-triangle me-2"></i>Important</h6>
-                    <p class="mb-0">
-                        Changing numbering settings after invoices have been issued may cause 
-                        inconsistencies in your records. Proceed with caution.
-                    </p>
-                </div>
+            <div class="modal-body">
+                <p>Ar tikrai norite ištrinti šį mokėjimą? Šio veiksmo negalima atšaukti.</p>
+                <input type="hidden" id="deleteId">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Atšaukti</button>
+                <button type="button" class="btn btn-danger" id="confirmDelete">Ištrinti</button>
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
 
-{% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Update preview when settings change
-        const prefixInput = document.getElementById('invoicePrefix');
-        const nextNumberInput = document.getElementById('nextNumber');
-        const formatSelect = document.getElementById('numberFormat');
-        
-        const updatePreview = function() {
-            const prefix = prefixInput.value || 'INV-';
-            const nextNumber = parseInt(nextNumberInput.value) || 1;
-            const format = formatSelect.value;
-            
-            let preview = '';
-            
-            switch(format) {
-                case 'sequential':
-                    preview = prefix + nextNumber.toString().padStart(6, '0');
-                    break;
-                case 'year':
-                    preview = prefix + new Date().getFullYear() + '-' + nextNumber.toString().padStart(4, '0');
-                    break;
-                case 'month':
-                    const now = new Date();
-                    const month = (now.getFullYear() + '' + (now.getMonth() + 1).toString().padStart(2, '0'));
-                    preview = prefix + month + '-' + nextNumber.toString().padStart(4, '0');
-                    break;
-                default:
-                    preview = prefix + nextNumber.toString().padStart(6, '0');
-            }
-            
-            document.querySelector('.badge.bg-primary').textContent = 'Next: ' + preview;
-        };
-        
-        // Add event listeners
-        [prefixInput, nextNumberInput, formatSelect].forEach(element => {
-            element.addEventListener('input', updatePreview);
-            element.addEventListener('change', updatePreview);
+    document.addEventListener('DOMContentLoaded', function () {
+        const paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
+        const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        let currentPaymentId = null;
+        let templatesLoaded = false;
+
+        // Mygtukų apdorojimas
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                loadPaymentData(this.dataset.id);
+            });
         });
-        
-        // Initialize preview
-        updatePreview();
+
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                showDeleteModal(this.dataset.id);
+            });
+        });
+
+        document.querySelectorAll('.download-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                downloadPaymentPDF(this.dataset.id);
+            });
+        });
+
+        document.getElementById('addItem').addEventListener('click', addItemRow);
+        document.getElementById('confirmDelete').addEventListener('click', deletePayment);
+        document.getElementById('paymentForm').addEventListener('submit', savePayment);
+
+        // Būsenos ir mokėjimo datos ryšys
+        document.getElementById('statusSelect').addEventListener('change', function () {
+            const datePaidField = document.getElementById('datePaid');
+            if (this.value === 'paid') {
+                datePaidField.required = true;
+                datePaidField.parentElement.style.display = 'block';
+
+                // Nustatyti šiandienos datą
+                if (!datePaidField.value) {
+                    const today = new Date().toISOString().split('T')[0];
+                    datePaidField.value = today;
+                }
+            } else {
+                datePaidField.required = false;
+                datePaidField.value = '';
+                datePaidField.parentElement.style.display = 'none';
+            }
+        });
+
+        // Pradinė eilutė
+        addItemRow();
+
+        // Funkcijos
+        function addItemRow(item = {}) {
+            const tbody = document.querySelector('#itemsTable tbody');
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><input type="text" class="form-control item-name" value="${item.name || ''}" required></td>
+                <td><input type="number" class="form-control item-quantity" min="1" value="${item.quantity || 1}" required></td>
+                <td><input type="number" class="form-control item-unit-price" min="0.01" step="0.01" value="${item.unit_price || ''}" required></td>
+                <td><input type="number" class="form-control item-discount" min="0" max="100" value="${item.discount || 0}"></td>
+                <td><input type="number" class="form-control item-vat" min="0" max="100" value="${item.vat || 0}"></td>
+                <td class="item-total">${item.total ? '€' + parseFloat(item.total).toFixed(2) : '€0.00'}</td>
+                <td><button type="button" class="btn btn-sm btn-danger remove-item"><i class="bi bi-trash"></i></button></td>
+            `;
+            tbody.appendChild(row);
+
+            // Apdorojimas
+            row.querySelector('.remove-item').addEventListener('click', () => row.remove());
+            ['input', 'change'].forEach(event => {
+                row.querySelectorAll('input').forEach(input => {
+                    input.addEventListener(event, calculateRowTotal);
+                });
+            });
+            calculateRowTotal({ target: row.querySelector('.item-quantity') });
+        }
+
+        function calculateRowTotal(e) {
+            const row = e.target.closest('tr');
+            const qty = parseFloat(row.querySelector('.item-quantity').value) || 0;
+            const price = parseFloat(row.querySelector('.item-unit-price').value) || 0;
+            const discount = parseFloat(row.querySelector('.item-discount').value) || 0;
+            const vat = parseFloat(row.querySelector('.item-vat').value) || 0;
+
+            let total = qty * price;
+            if (discount) total -= total * discount / 100;
+            if (vat) total += total * vat / 100;
+
+            row.querySelector('.item-total').textContent = '€' + total.toFixed(2);
+            updateGrandTotal();
+        }
+
+        function updateGrandTotal() {
+            let grandTotal = 0;
+            document.querySelectorAll('.item-total').forEach(td => {
+                const value = parseFloat(td.textContent.replace('€', ''));
+                grandTotal += value;
+            });
+            document.getElementById('grandTotal').textContent = '€' + grandTotal.toFixed(2);
+        }
+
+        function loadPaymentData(paymentId) {
+            currentPaymentId = paymentId;
+
+            // Įkėlimo būsena
+            document.getElementById('modalTitle').textContent = 'Kraunasi...';
+            document.querySelector('#itemsTable tbody').innerHTML = '<tr><td colspan="7" class="text-center">Kraunami mokėjimo duomenys...</td></tr>';
+            paymentModal.show();
+
+            // Duomenų užklausa
+            fetch(`/invoice/api/payment/${paymentId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Nepavyko įkelti mokėjimo duomenų');
+                    }
+                    return response.json();
+                })
+                .then(paymentData => {
+                    fillPaymentForm(paymentData);
+                })
+                .catch(error => {
+                    console.error('Klaida įkeliant:', error);
+                    document.getElementById('modalTitle').textContent = 'Klaida';
+                    document.querySelector('#itemsTable tbody').innerHTML = '<tr><td colspan="7" class="text-center text-danger">Klaida įkeliant duomenis</td></tr>';
+                });
+        }
+
+        function fillPaymentForm(paymentData) {
+            document.getElementById('modalTitle').textContent = 'Redaguoti mokėjimą';
+            document.getElementById('clientSelect').value = paymentData.client;
+            document.getElementById('dateIssued').value = paymentData.date_issued;
+            document.getElementById('dateDue').value = paymentData.date_due;
+            document.getElementById('datePaid').value = paymentData.date_paid || '';
+            document.getElementById('statusSelect').value = paymentData.status;
+            document.getElementById('description').value = paymentData.description || '';
+            document.getElementById('paymentId').value = paymentData.id;
+
+            // Atnaujinti mokėjimo datos matomumą
+            const statusChangeEvent = new Event('change');
+            document.getElementById('statusSelect').dispatchEvent(statusChangeEvent);
+
+            // Išvalyti ir pridėti prekes
+            document.querySelector('#itemsTable tbody').innerHTML = '';
+
+            if (paymentData.items && Array.isArray(paymentData.items)) {
+                paymentData.items.forEach(item => {
+                    let total = (item.quantity || 0) * (item.unit_price || 0);
+                    if (item.discount) total -= total * item.discount / 100;
+                    if (item.vat) total += total * item.vat / 100;
+
+                    addItemRow({
+                        name: item.name || '',
+                        quantity: item.quantity || 1,
+                        unit_price: item.unit_price || 0,
+                        discount: item.discount || 0,
+                        vat: item.vat || 0,
+                        total: total
+                    });
+                });
+            }
+
+            if (!paymentData.items || paymentData.items.length === 0) {
+                addItemRow();
+            }
+
+            updateGrandTotal();
+        }
+
+        function downloadPaymentPDF(paymentId) {
+            fetch(`/payment/${paymentId}/pdf/`)
+                .then(response => {
+                    if (response.ok) return response.blob();
+                    throw new Error('Nepavyko sugeneruoti PDF');
+                })
+                .then(blob => {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `payment_${paymentId}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                })
+                .catch(error => {
+                    console.error('Klaida:', error);
+                    alert('Klaida atsisiunčiant: ' + error.message);
+                });
+        }
+
+        function showDeleteModal(paymentId) {
+            document.getElementById('deleteId').value = paymentId;
+            deleteModal.show();
+        }
+
+        // Šablonų įkėlimas
+        function loadNumberingTemplates() {
+            return fetch('/settings/api/numbering-templates')
+                .then(response => {
+                    if (!response.ok) throw new Error('Nepavyko įkelti šablonų');
+                    return response.json();
+                })
+                .then(templates => {
+                    const select = document.getElementById('templateSelect');
+
+                    // Valymas ir pridėjimas
+                    while (select.options.length > 1) {
+                        select.remove(1);
+                    }
+
+                    templates.forEach(template => {
+                        const option = document.createElement('option');
+                        option.value = template.id;
+                        option.textContent = template.name;
+                        select.appendChild(option);
+                    });
+
+                    return templates;
+                })
+                .catch(error => {
+                    console.error('Klaida:', error);
+                    alert('Nepavyko įkelti šablonų');
+                    return [];
+                });
+        }
+
+        function savePayment(e) {
+            e.preventDefault();
+
+            // Prekių validacija
+            const itemRows = document.querySelectorAll('#itemsTable tbody tr');
+            if (itemRows.length === 0) {
+                alert('Prašome pridėti prekę');
+                return;
+            }
+
+            // Duomenų rinkimas
+            const formData = {
+                client: document.getElementById('clientSelect').value,
+                date_issued: document.getElementById('dateIssued').value,
+                date_due: document.getElementById('dateDue').value,
+                date_paid: document.getElementById('datePaid').value || null,
+                status: document.getElementById('statusSelect').value,
+                description: document.getElementById('description').value,
+                amount: parseFloat(document.getElementById('grandTotal').textContent.replace('€', '')),
+                items: []
+            };
+
+            // Naujiems mokėjimams
+            if (!currentPaymentId) {
+                formData.template_id = document.getElementById('templateSelect').value || null;
+            }
+
+            // Privalomi laukai
+            if (!formData.client || !formData.date_issued || !formData.date_due) {
+                alert('Prašome užpildyti privalomus laukus');
+                return;
+            }
+
+            // Mokėjimo datos validacija
+            if (formData.status === 'paid' && !formData.date_paid) {
+                alert('Apmokėjimo data yra privaloma');
+                return;
+            }
+
+            // Prekių rinkimas
+            let hasItemError = false;
+            itemRows.forEach(row => {
+                const name = row.querySelector('.item-name').value;
+                const quantity = parseFloat(row.querySelector('.item-quantity').value);
+                const unit_price = parseFloat(row.querySelector('.item-unit-price').value);
+
+                if (!name || isNaN(quantity) || isNaN(unit_price)) {
+                    hasItemError = true;
+                    return;
+                }
+
+                formData.items.push({
+                    name: name,
+                    quantity: quantity,
+                    unit_price: unit_price,
+                    discount: parseFloat(row.querySelector('.item-discount').value) || 0,
+                    vat: parseFloat(row.querySelector('.item-vat').value) || 0
+                });
+            });
+
+            if (hasItemError) {
+                alert('Prašome užpildyti prekių laukus');
+                return;
+            }
+
+            // Metodas ir URL
+            const method = currentPaymentId ? 'PUT' : 'POST';
+            const url = currentPaymentId ? `/invoice/api/${currentPaymentId}/` : '/invoice/api/';
+
+            // CSRF tokenas
+            const csrfToken = getCSRFToken();
+            if (!csrfToken) {
+                alert('Trūksta CSRF tokeno!');
+                return;
+            }
+
+            // Siuntimas
+            fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify(formData)
+            })
+                .then(response => {
+                    if (response.ok) {
+                        paymentModal.hide();
+                        location.reload();
+                    } else {
+                        return response.json().then(err => {
+                            throw new Error(JSON.stringify(err));
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Klaida:', error);
+                    alert(`Klaida: ${error.message}`);
+                });
+        }
+
+        function deletePayment() {
+            const paymentId = document.getElementById('deleteId').value;
+            const csrfToken = getCSRFToken();
+
+            fetch(`/invoice/api/${paymentId}/`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': csrfToken
+                }
+            })
+                .then(response => {
+                    if (response.ok) {
+                        deleteModal.hide();
+                        location.reload();
+                    } else {
+                        alert('Nepavyko ištrinti');
+                    }
+                })
+                .catch(error => {
+                    console.error('Klaida:', error);
+                    alert('Klaida trinant');
+                });
+        }
+
+        function getCSRFToken() {
+            const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+            return csrfInput ? csrfInput.value : '';
+        }
+
+        // Atstatymas atidarant
+        paymentModal._element.addEventListener('show.bs.modal', () => {
+            if (!currentPaymentId) {
+                document.getElementById('paymentForm').reset();
+                document.querySelector('#itemsTable tbody').innerHTML = '';
+                document.getElementById('modalTitle').textContent = 'Pridėti mokėjimą';
+                document.getElementById('grandTotal').textContent = '€0.00';
+                document.getElementById('datePaid').value = '';
+                document.getElementById('templateField').style.display = 'block';
+                addItemRow();
+                currentPaymentId = null;
+
+                // Paslėpti mokėjimo datą
+                document.getElementById('datePaid').parentElement.style.display = 'none';
+
+                // Šablonų įkėlimas
+                if (!templatesLoaded) {
+                    loadNumberingTemplates().then(() => {
+                        templatesLoaded = true;
+                    });
+                }
+            } else {
+                document.getElementById('templateField').style.display = 'none';
+            }
+        });
+
+        // ID atstatymas uždarius
+        paymentModal._element.addEventListener('hidden.bs.modal', () => {
+            currentPaymentId = null;
+        });
     });
 </script>
-{% endblock %}
 
 <style>
-    .form-check-input:checked {
-        background-color: var(--primary);
-        border-color: var(--primary);
-    }
-    
-    .form-switch .form-check-input {
-        height: 1.5rem;
-        width: 2.8rem;
-    }
-    
-    .form-switch .form-check-input:focus {
-        box-shadow: 0 0 0 0.25rem rgba(44, 107, 237, 0.25);
-    }
-    
-    .form-text {
-        font-size: 0.85rem;
-        color: #6c757d;
-    }
-    
-    table.table-sm th,
-    table.table-sm td {
-        padding: 0.75rem;
-    }
-    
-    .card-header .badge {
-        font-size: 0.9rem;
+    /* Стили остаются без изменений */
+    .item-total {
         font-weight: 500;
-        padding: 0.5rem 0.75rem;
+        vertical-align: middle;
+        text-align: right;
+        padding-right: 15px !important;
     }
-    
-    .alert-light {
-        background-color: #f8f9fa;
+
+    #itemsTable input {
+        min-width: 80px;
+        width: 100%;
     }
+
+    /* ... остальные стили ... */
 </style>
+{% endblock %}
